@@ -1,0 +1,6 @@
+{
+  "summary":  "Final UI-revised implementation plan for nostr MojiSurvivor. Fully integrates the updated navigation contract, clean content-first arcade arena, touch-and-drag movement with no visible joystick, NIP-30 emoji discovery pipeline, Bestiary Codex with power rankings, spell merging, wave-5 Apex bosses, receipt-based progression, and immutable per-run Nostr relay leaderboards.",
+  "updatedAt":  "2026-11-02T13:16:01.782246512Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

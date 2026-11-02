@@ -1,0 +1,6 @@
+{
+  "name": "MojiSurvivor",
+  "description": "Retro-arcade survivor action game where players battle waves of rogue Nostr custom emojis with NIP-30 discovery, global relay leaderboards, and signer integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

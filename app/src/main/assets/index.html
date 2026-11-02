@@ -1,0 +1,4595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>nostr MojiSurvivor</title>
+  <style>
+/* BreBre Colors UI Standards Palette v0 */
+:root {
+  --color-black: #000000;
+  --color-deep-pink: #FF1493;
+  --color-light-pink: #FFB6D9;
+  --color-white: #FFFFFF;
+  --color-gray-100: #B8B8B8;
+  --color-gray-900: #111111;
+  --color-gray-850: #1A1A1A;
+  --color-silver: #C0C0C0;
+  --color-gray-600: #5E5E5E;
+  --color-pink-dark-1: #CD0D72;
+  --color-pink-dark-2: #9A0957;
+  --color-pink-dark-3: #5B0633;
+
+  /* App Theme Tokens */
+  --bg-primary: var(--color-black);
+  --bg-card: var(--color-gray-900);
+  --bg-card-subtle: var(--color-gray-850);
+  --text-primary: var(--color-white);
+  --text-muted: var(--color-gray-100);
+  --text-dim: var(--color-gray-600);
+  --accent-pink: var(--color-deep-pink);
+  --accent-pink-glow: rgba(255, 20, 147, 0.4);
+  --border-pink: var(--color-deep-pink);
+  --border-dim: var(--color-gray-850);
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* TOP HEADER */
+.screen-header {
+  height: 56px;
+  min-height: 56px;
+  background: linear-gradient(180deg, var(--color-gray-900) 0%, rgba(17,17,17,0.85) 100%);
+  border-bottom: 1px solid var(--color-pink-dark-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 10;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.neon-badge {
+  background: var(--color-pink-dark-3);
+  color: var(--color-light-pink);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--color-pink-dark-1);
+  letter-spacing: 1px;
+}
+
+.game-title {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--color-white);
+}
+
+.game-title span {
+  color: var(--color-deep-pink);
+  text-shadow: 0 0 10px var(--accent-pink-glow);
+}
+
+.profile-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-gray-850);
+  border: 1px solid var(--color-pink-dark-2);
+  border-radius: 20px;
+  padding: 4px 10px 4px 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-pill:active {
+  transform: scale(0.96);
+  border-color: var(--color-deep-pink);
+}
+
+.avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-deep-pink);
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.profile-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-white);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-status {
+  font-size: 9px;
+  color: var(--color-light-pink);
+}
+
+/* VIEWS CONTAINER */
+#views-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+}
+
+.game-view.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 1. LOBBY VIEW */
+#view-lobby {
+  padding: 16px;
+  gap: 20px;
+}
+
+.lobby-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: radial-gradient(circle at center, var(--color-pink-dark-3) 0%, var(--color-gray-900) 80%);
+  border: 1px solid var(--color-pink-dark-2);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,20,147,0.15);
+}
+
+.hero-centerpiece {
+  margin-bottom: 20px;
+}
+
+.crest-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 12px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cyber-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px dashed var(--color-deep-pink);
+  border-radius: 50%;
+  animation: spin 12s linear infinite;
+  box-shadow: 0 0 15px var(--accent-pink-glow);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.crest-icon {
+  font-size: 28px;
+}
+
+.sub-heading {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--color-deep-pink);
+  margin-bottom: 6px;
+  text-shadow: 0 0 8px var(--accent-pink-glow);
+}
+
+.flavor-text {
+  font-size: 12px;
+  color: var(--color-gray-100);
+  max-width: 280px;
+  line-height: 1.4;
+  margin: 0 auto;
+}
+
+.action-buttons-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quick-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: var(--color-black);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 9px;
+  color: var(--color-gray-600);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.stat-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-white);
+  font-family: var(--font-mono);
+}
+
+.text-pink {
+  color: var(--color-deep-pink) !important;
+}
+
+.lobby-nav-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.nav-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-gray-900);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--color-white);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-card:active {
+  transform: scale(0.98);
+  border-color: var(--color-deep-pink);
+  background: var(--color-gray-850);
+}
+
+.card-icon {
+  font-size: 24px;
+}
+
+.card-text {
+  flex: 1;
+}
+
+.card-text h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-white);
+  margin-bottom: 2px;
+}
+
+.card-text p {
+  font-size: 11px;
+  color: var(--color-gray-100);
+}
+
+.arrow-indicator {
+  font-size: 18px;
+  color: var(--color-deep-pink);
+  font-weight: 900;
+}
+
+/* BUTTONS */
+.btn {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-weight: 800;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  font-family: var(--font-family);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background: var(--color-deep-pink);
+  color: var(--color-white);
+  box-shadow: 0 4px 15px var(--accent-pink-glow);
+}
+
+.btn-primary:active {
+  background: var(--color-pink-dark-1);
+}
+
+.btn-secondary {
+  background: var(--color-gray-850);
+  color: var(--color-white);
+  border: 1px solid var(--color-deep-pink);
+}
+
+.btn-secondary:active {
+  background: var(--color-gray-900);
+}
+
+.btn-huge {
+  height: 52px;
+  font-size: 16px;
+  letter-spacing: 1.5px;
+  border-radius: 14px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+.btn-back {
+  background: var(--color-gray-850);
+  border: 1px solid var(--color-gray-600);
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* SUBVIEWS HEADERS */
+.subview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-gray-900);
+  border-bottom: 1px solid var(--color-pink-dark-3);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.subview-header h2 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-white);
+  letter-spacing: 1px;
+}
+
+.view-intro {
+  font-size: 12px;
+  color: var(--color-gray-100);
+  padding: 12px 16px;
+  line-height: 1.4;
+}
+
+/* 2. BATTLE ARENA (CANVAS & HUD) */
+#view-arena {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-black);
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+#arena-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.hud-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.exp-bar-container {
+  flex: 1;
+  height: 16px;
+  background: rgba(17, 17, 17, 0.85);
+  border: 1px solid var(--color-deep-pink);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.exp-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-pink-dark-1), var(--color-deep-pink));
+  transition: width 0.15s ease-out;
+}
+
+.exp-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--color-white);
+  font-family: var(--font-mono);
+  text-shadow: 0 1px 2px #000;
+}
+
+.hud-pause-btn {
+  width: 32px;
+  height: 32px;
+  background: rgba(17, 17, 17, 0.9);
+  border: 1px solid var(--color-deep-pink);
+  border-radius: 8px;
+  color: var(--color-white);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.hud-health-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(17, 17, 17, 0.8);
+  border: 1px solid var(--color-pink-dark-2);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.hud-hp-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-black);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hud-hp-fill {
+  width: 100%;
+  height: 100%;
+  background: #00FF88;
+  transition: width 0.1s ease;
+}
+
+.hud-hp-val {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-white);
+}
+
+.hud-pill {
+  background: rgba(17, 17, 17, 0.85);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 6px;
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hud-pill .label {
+  font-size: 8px;
+  color: var(--color-gray-600);
+  font-weight: 800;
+}
+
+.hud-pill .val {
+  font-size: 11px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-white);
+}
+
+/* POWER-UP DOCK */
+.powerup-timers-dock {
+  position: absolute;
+  bottom: 16px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.powerup-pill-hud {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(17,17,17,0.9);
+  border: 1px solid var(--color-deep-pink);
+  border-radius: 14px;
+  padding: 4px 10px;
+  box-shadow: 0 0 10px var(--accent-pink-glow);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* BOSS ALERT BANNER */
+.boss-banner {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid var(--color-deep-pink);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
+  animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--color-deep-pink); }
+  50% { border-color: var(--color-white); }
+}
+
+.boss-siren {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--color-deep-pink);
+  letter-spacing: 1px;
+}
+
+.boss-health-container {
+  height: 12px;
+  background: var(--color-black);
+  border: 1px solid var(--color-pink-dark-1);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.boss-health-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #FF1493, #FF4500);
+}
+
+.boss-name-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 900;
+  color: var(--color-white);
+  letter-spacing: 0.5px;
+}
+
+/* TOAST */
+.game-toast {
+  position: absolute;
+  top: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-deep-pink);
+  color: var(--color-white);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.game-toast.visible {
+  opacity: 1;
+}
+
+/* MODAL OVERLAYS (LEVEL UP, PAUSE, GAME OVER) */
+.arena-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.arena-modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-gray-900);
+  border: 2px solid var(--color-deep-pink);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 0 30px rgba(255, 20, 147, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-header {
+  text-align: center;
+}
+
+.modal-badge {
+  background: var(--color-deep-pink);
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+}
+
+.modal-badge-danger {
+  background: #FF0055;
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--color-white);
+  margin-top: 6px;
+}
+
+.modal-header p {
+  font-size: 11px;
+  color: var(--color-gray-100);
+  margin-top: 2px;
+}
+
+/* UPGRADE CARDS (LEVEL UP) */
+.cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upgrade-card-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-gray-850);
+  border: 1px solid var(--color-pink-dark-1);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  pointer-events: auto;
+}
+
+.upgrade-card-item:active {
+  transform: scale(0.97);
+  border-color: var(--color-deep-pink);
+  background: var(--color-black);
+}
+
+.upgrade-card-icon {
+  font-size: 28px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-black);
+  border: 1px solid var(--color-deep-pink);
+  border-radius: 8px;
+}
+
+.upgrade-card-details {
+  flex: 1;
+}
+
+.upgrade-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.upgrade-card-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-white);
+}
+
+.upgrade-card-lvl {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-light-pink);
+  background: var(--color-pink-dark-3);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.upgrade-card-desc {
+  font-size: 11px;
+  color: var(--color-gray-100);
+  line-height: 1.3;
+}
+
+/* RUN SUMMARY GRID */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  background: var(--color-black);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.summary-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-cell.full-width {
+  grid-column: span 2;
+  border-top: 1px solid var(--color-gray-850);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.cell-label {
+  font-size: 9px;
+  color: var(--color-gray-600);
+  font-weight: 800;
+}
+
+.cell-val {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--color-white);
+  font-family: var(--font-mono);
+}
+
+.publication-box {
+  background: var(--color-gray-850);
+  border: 1px solid var(--color-pink-dark-2);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pub-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pub-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-white);
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--color-pink-dark-3);
+  color: var(--color-light-pink);
+}
+
+.badge.success {
+  background: #008844;
+  color: #FFFFFF;
+}
+
+.pub-desc {
+  font-size: 10px;
+  color: var(--color-gray-100);
+  line-height: 1.3;
+}
+
+.pub-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 3. UPGRADE LAB VIEW */
+.mojo-badge {
+  background: var(--color-black);
+  border: 1px solid var(--color-pink-dark-1);
+  border-radius: 20px;
+  padding: 3px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.upgrades-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.upgrade-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-gray-900);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.upgrade-row-icon {
+  font-size: 26px;
+}
+
+.upgrade-row-info {
+  flex: 1;
+}
+
+.upgrade-row-info h4 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-white);
+}
+
+.upgrade-row-info p {
+  font-size: 11px;
+  color: var(--color-gray-100);
+  margin-top: 2px;
+}
+
+.upgrade-meter {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.meter-pip {
+  width: 14px;
+  height: 6px;
+  background: var(--color-gray-850);
+  border-radius: 2px;
+}
+
+.meter-pip.filled {
+  background: var(--color-deep-pink);
+  box-shadow: 0 0 6px var(--accent-pink-glow);
+}
+
+.btn-buy-upgrade {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  background: var(--color-deep-pink);
+  color: var(--color-white);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-buy-upgrade.disabled {
+  background: var(--color-gray-850);
+  color: var(--color-gray-600);
+  cursor: not-allowed;
+}
+
+/* 4. CODEX VIEW */
+.codex-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.tab-pill {
+  background: var(--color-black);
+  border: 1px solid var(--color-gray-850);
+  color: var(--color-gray-100);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tab-pill.active {
+  background: var(--color-deep-pink);
+  color: var(--color-white);
+  border-color: var(--color-deep-pink);
+}
+
+.codex-controls {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-black);
+  border-bottom: 1px solid var(--color-gray-850);
+}
+
+.search-input {
+  flex: 1;
+  background: var(--color-gray-900);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--color-white);
+  font-size: 12px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: var(--color-deep-pink);
+}
+
+.codex-counter {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-light-pink);
+  white-space: nowrap;
+}
+
+.codex-grid {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.codex-card {
+  background: var(--color-gray-900);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.codex-card.discovered {
+  border-color: var(--color-pink-dark-1);
+}
+
+.codex-card.undiscovered {
+  opacity: 0.6;
+  filter: grayscale(1);
+}
+
+.codex-emoji-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+.codex-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-white);
+}
+
+.codex-tier-badge {
+  font-size: 8px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-pink-dark-3);
+  color: var(--color-light-pink);
+}
+
+.codex-stats-row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  font-size: 9px;
+  color: var(--color-gray-100);
+  border-top: 1px solid var(--color-gray-850);
+  padding-top: 4px;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+/* 5. LEADERBOARD VIEW */
+.leaderboard-summary-bar {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--color-black);
+  border-bottom: 1px solid var(--color-gray-850);
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-item .label {
+  font-size: 9px;
+  color: var(--color-gray-600);
+  font-weight: 800;
+}
+
+.summary-item .val {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-white);
+}
+
+.leaderboard-table-container {
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.leaderboard-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--color-gray-600);
+  border-bottom: 1px solid var(--color-gray-850);
+}
+
+.leaderboard-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--color-gray-850);
+  color: var(--color-white);
+}
+
+.table-rank {
+  font-weight: 800;
+  color: var(--color-deep-pink);
+}
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--color-deep-pink);
+}
+
+/* 6. SETTINGS VIEW */
+.settings-sections {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-card {
+  background: var(--color-gray-900);
+  border: 1px solid var(--color-gray-850);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-card h3 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-white);
+}
+
+.settings-card p {
+  font-size: 11px;
+  color: var(--color-gray-100);
+  line-height: 1.3;
+}
+
+.signer-selection-box {
+  background: var(--color-black);
+  border: 1px solid var(--color-pink-dark-2);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signer-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #00FF88;
+  box-shadow: 0 0 6px #00FF88;
+}
+
+.pubkey-display {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-gray-100);
+  word-break: break-all;
+  background: var(--color-gray-900);
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.signer-btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.toggle-row span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-white);
+}
+
+/* TOGGLE SWITCH */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--color-gray-850);
+  border: 1px solid var(--color-gray-600);
+  transition: .2s;
+  border-radius: 22px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--color-white);
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--color-deep-pink);
+  border-color: var(--color-deep-pink);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* CRT SCANLINE OVERLAY */
+.crt-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+</style>
+</head>
+<body class="brebre-theme">
+  <div id="app">
+    <!-- TOP NAVIGATION / HEADER (Non-combat screens) -->
+    <header id="main-header" class="screen-header">
+      <div class="logo-area">
+        <span class="neon-badge">NOSTR</span>
+        <h1 class="game-title">MOJI<span>SURVIVOR</span></h1>
+      </div>
+      <div class="profile-pill" id="profile-pill" onclick="openProfileModal()">
+        <img id="header-avatar" class="avatar-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='20' cy='20' r='18' fill='%23FF1493'/><text x='20' y='26' font-size='20' text-anchor='middle' fill='%23FFFFFF' font-family='sans-serif'>⚡</text></svg>" alt="Avatar">
+        <div class="profile-info">
+          <span class="profile-name" id="header-name">Pleb Survivor</span>
+          <span class="profile-status" id="header-signer-badge">Guest Key</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN VIEWS CONTAINER -->
+    <main id="views-container">
+      
+      <!-- 1. LOBBY VIEW -->
+      <section id="view-lobby" class="game-view active">
+        <div class="lobby-hero">
+          <div class="hero-centerpiece">
+            <div class="crest-container">
+              <div class="cyber-ring"></div>
+              <div class="crest-icon">⚡👾⚡</div>
+            </div>
+            <h2 class="sub-heading">SURVIVE THE NOSTR HORDE</h2>
+            <p class="flavor-text">Battle rogue custom emojis whose attributes are cryptographically derived from their SHA-256 hashes.</p>
+          </div>
+
+          <div class="action-buttons-group">
+            <button class="btn btn-primary btn-huge" id="btn-start-game" onclick="startGame()">
+              <span class="btn-icon">▶</span> START RUN
+            </button>
+            <div class="quick-stats-bar">
+              <div class="stat-cell">
+                <span class="stat-label">MOJO BANK</span>
+                <span class="stat-val text-pink" id="lobby-mojo">0 ⟡</span>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">HIGH SCORE</span>
+                <span class="stat-val" id="lobby-highscore">0</span>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">BEST WAVE</span>
+                <span class="stat-val" id="lobby-bestwave">1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <nav class="lobby-nav-grid">
+          <button class="nav-card" onclick="switchTab('lab')">
+            <span class="card-icon">🧪</span>
+            <div class="card-text">
+              <h3>Upgrade Lab</h3>
+              <p>Permanent base stats</p>
+            </div>
+            <span class="arrow-indicator">→</span>
+          </button>
+          
+          <button class="nav-card" onclick="switchTab('codex')">
+            <span class="card-icon">📖</span>
+            <div class="card-text">
+              <h3>Emoji Codex</h3>
+              <p>Discovered & Global bestiary</p>
+            </div>
+            <span class="arrow-indicator">→</span>
+          </button>
+
+          <button class="nav-card" onclick="switchTab('leaderboard')">
+            <span class="card-icon">🏆</span>
+            <div class="card-text">
+              <h3>Relay Leaderboard</h3>
+              <p>Global cryptographic rankings</p>
+            </div>
+            <span class="arrow-indicator">→</span>
+          </button>
+
+          <button class="nav-card" onclick="switchTab('settings')">
+            <span class="card-icon">⚙️</span>
+            <div class="card-text">
+              <h3>Signer & Relays</h3>
+              <p>Amber NIP-55 & Settings</p>
+            </div>
+            <span class="arrow-indicator">→</span>
+          </button>
+        </nav>
+      </section>
+
+      <!-- 2. BATTLE ARENA (EDGE-TO-EDGE CANVAS) -->
+      <section id="view-arena" class="game-view">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- IN-GAME MINIMAL HUD -->
+        <div id="arena-hud">
+          <div class="hud-top-bar">
+            <!-- EXP Progress -->
+            <div class="exp-bar-container">
+              <div class="exp-bar-fill" id="hud-exp-fill"></div>
+              <span class="exp-text" id="hud-exp-text">LVL 1 (0 / 100)</span>
+            </div>
+
+            <!-- Pause button -->
+            <button class="hud-pause-btn" onclick="togglePause()">⏸</button>
+          </div>
+
+          <div class="hud-status-row">
+            <div class="hud-health-box">
+              <div class="hud-hp-track">
+                <div class="hud-hp-fill" id="hud-hp-fill"></div>
+              </div>
+              <span class="hud-hp-val" id="hud-hp-text">100 / 100</span>
+            </div>
+
+            <div class="hud-pill wave-pill">
+              <span class="label">WAVE</span>
+              <span class="val" id="hud-wave">1</span>
+            </div>
+
+            <div class="hud-pill score-pill">
+              <span class="label">SCORE</span>
+              <span class="val" id="hud-score">0</span>
+            </div>
+
+            <div class="hud-pill mojo-pill">
+              <span class="label">MOJO</span>
+              <span class="val text-pink" id="hud-mojo">0 ⟡</span>
+            </div>
+          </div>
+
+          <!-- Active Power-up Status indicators -->
+          <div id="powerup-timers" class="powerup-timers-dock"></div>
+
+          <!-- Boss Banner Alert -->
+          <div id="boss-alert-banner" class="boss-banner hidden">
+            <span class="boss-siren">⚠️ WARNING: APEX RELAY BOSS INCOMING ⚠️</span>
+            <div class="boss-health-container" id="boss-health-box">
+              <div class="boss-health-fill" id="boss-hp-fill"></div>
+              <span class="boss-name-label" id="boss-name-label">EMOJI TITAN</span>
+            </div>
+          </div>
+
+          <!-- Toast Notification for Drops & Level -->
+          <div id="game-toast" class="game-toast hidden"></div>
+        </div>
+
+        <!-- LEVEL-UP SPELL SELECTION / MERGE MODAL -->
+        <div id="level-up-modal" class="arena-modal-overlay hidden">
+          <div class="arena-modal-card">
+            <div class="modal-header">
+              <span class="modal-badge">LEVEL UP!</span>
+              <h2>CHOOSE WEAPON / SPELL</h2>
+              <p>Duplicate spells automatically merge and evolve!</p>
+            </div>
+            <div class="cards-grid" id="upgrade-cards-container">
+              <!-- Dynamically populated 3 choices -->
+            </div>
+          </div>
+        </div>
+
+        <!-- PAUSE MODAL -->
+        <div id="pause-modal" class="arena-modal-overlay hidden">
+          <div class="arena-modal-card">
+            <h2>TACTICAL PAUSE</h2>
+            <div class="pause-stats" id="pause-run-stats"></div>
+            <div class="pause-actions">
+              <button class="btn btn-primary" onclick="togglePause()">RESUME</button>
+              <button class="btn btn-secondary" onclick="abandonRun()">ABANDON RUN</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GAME OVER / RUN SUMMARY MODAL -->
+        <div id="game-over-modal" class="arena-modal-overlay hidden">
+          <div class="arena-modal-card run-summary-card">
+            <div class="modal-header">
+              <span class="modal-badge-danger">RUN TERMINATED</span>
+              <h2 id="summary-title">SURVIVAL SUMMARY</h2>
+            </div>
+            
+            <div class="summary-grid">
+              <div class="summary-cell">
+                <span class="cell-label">TIME SURVIVED</span>
+                <span class="cell-val" id="summary-time">00:00</span>
+              </div>
+              <div class="summary-cell">
+                <span class="cell-label">WAVE REACHED</span>
+                <span class="cell-val" id="summary-wave">1</span>
+              </div>
+              <div class="summary-cell">
+                <span class="cell-label">EMOJIS DEFEATED</span>
+                <span class="cell-val" id="summary-defeated">0</span>
+              </div>
+              <div class="summary-cell">
+                <span class="cell-label">FINAL SCORE</span>
+                <span class="cell-val text-pink" id="summary-score">0</span>
+              </div>
+              <div class="summary-cell full-width">
+                <span class="cell-label">MOJO ESSENCE EARNED</span>
+                <span class="cell-val text-pink" id="summary-mojo">+0 ⟡</span>
+              </div>
+            </div>
+
+            <!-- Receipt & Publishing status -->
+            <div class="publication-box">
+              <div class="pub-status-row">
+                <span class="pub-label">NOSTR RUN RECEIPT</span>
+                <span class="badge" id="pub-receipt-status">Ready to Sign</span>
+              </div>
+              <p class="pub-desc" id="pub-desc-text">Sign this immutable run receipt to submit your score to global relay leaderboards.</p>
+              
+              <div class="pub-actions">
+                <button class="btn btn-primary" id="btn-publish-receipt" onclick="publishRunReceipt()">
+                  ⚡ SIGN & BROADCAST TO RELAYS
+                </button>
+                <button class="btn btn-secondary" onclick="closeGameOverAndReturn()">
+                  RETURN TO LOBBY
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. UPGRADE LAB VIEW -->
+      <section id="view-lab" class="game-view">
+        <div class="subview-header">
+          <button class="btn-back" onclick="switchTab('lobby')">← LOBBY</button>
+          <h2>MOJO UPGRADE LAB</h2>
+          <div class="mojo-badge">
+            <span class="label">BALANCE:</span>
+            <span class="val text-pink" id="lab-mojo-balance">0 ⟡</span>
+          </div>
+        </div>
+
+        <p class="view-intro">Spend Mojo earned in battle on permanent cybernetic enhancements. Base stats persist across runs and are synchronized with your Nostr receipt records.</p>
+
+        <div class="upgrades-list" id="upgrades-list-container">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- 4. EMOJI CODEX VIEW (LOCAL DISCOVERED & GLOBAL CODEX) -->
+      <section id="view-codex" class="game-view">
+        <div class="subview-header">
+          <button class="btn-back" onclick="switchTab('lobby')">← LOBBY</button>
+          <h2>EMOJI BESTIARY & CODEX</h2>
+          <div class="codex-tabs">
+            <button class="tab-pill active" id="tab-codex-local" onclick="switchCodexTab('local')">DISCOVERED (ME)</button>
+            <button class="tab-pill" id="tab-codex-global" onclick="switchCodexTab('global')">GLOBAL RELAY CODEX</button>
+          </div>
+        </div>
+
+        <div class="codex-controls">
+          <input type="text" id="codex-search" class="search-input" placeholder="Search by name, tag, or SHA-256 hash..." oninput="filterCodex()">
+          <div class="codex-counter" id="codex-counter">Discovered: 0 / 0</div>
+        </div>
+
+        <div class="codex-grid" id="codex-grid-container">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- 5. GLOBAL RELAY LEADERBOARD VIEW -->
+      <section id="view-leaderboard" class="game-view">
+        <div class="subview-header">
+          <button class="btn-back" onclick="switchTab('lobby')">← LOBBY</button>
+          <h2>RELAY LEADERBOARDS</h2>
+          <button class="btn btn-secondary btn-sm" onclick="refreshLeaderboard()">🔄 REFRESH</button>
+        </div>
+
+        <div class="leaderboard-summary-bar">
+          <div class="summary-item">
+            <span class="label">CONNECTED RELAYS</span>
+            <span class="val text-pink" id="relays-active-count">3 Active</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">MY TOP RANK</span>
+            <span class="val" id="my-top-rank">#--</span>
+          </div>
+        </div>
+
+        <div class="leaderboard-table-container">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>RANK</th>
+                <th>PLAYER</th>
+                <th>SCORE</th>
+                <th>WAVE</th>
+                <th>KILLS</th>
+                <th>VERIFIED RECEIPT</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. SETTINGS VIEW -->
+      <section id="view-settings" class="game-view">
+        <div class="subview-header">
+          <button class="btn-back" onclick="switchTab('lobby')">← LOBBY</button>
+          <h2>SETTINGS & SIGNER</h2>
+        </div>
+
+        <div class="settings-sections">
+          <!-- Identity & Signer -->
+          <div class="settings-card">
+            <h3>Nostr Identity & Signer</h3>
+            <p>Connect your NIP-55 external signer (Amber) or use a local keypair.</p>
+            
+            <div class="signer-selection-box">
+              <div class="signer-status-row">
+                <span class="status-indicator" id="signer-status-light"></span>
+                <span class="signer-name" id="settings-signer-type">Guest Mode</span>
+              </div>
+              <div class="pubkey-display" id="settings-pubkey-display">npub1...</div>
+              
+              <div class="signer-btn-row">
+                <button class="btn btn-primary btn-sm" id="btn-connect-amber" onclick="connectAmberSigner()">
+                  ⚡ CONNECT AMBER (NIP-55)
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="generateNewGuestKey()">
+                  GENERATE GUEST KEY
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Relays list -->
+          <div class="settings-card">
+            <h3>Connected Nostr Relays</h3>
+            <p>NIP-30 emojis and global run receipts are queried and broadcast here.</p>
+            <div class="relays-list" id="settings-relays-list">
+              <!-- List of relays -->
+            </div>
+          </div>
+
+          <!-- Audio & Visuals -->
+          <div class="settings-card">
+            <h3>Audio & Retro FX</h3>
+            <div class="toggle-row">
+              <span>8-Bit Sound Effects</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-sfx" checked onchange="toggleSetting('sfx')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <span>CRT Scanline Overlay</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-crt" checked onchange="toggleSetting('crt')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <span>Screen Shake on Impact</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-shake" checked onchange="toggleSetting('shake')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <span>Haptic Feedback (Android)</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-haptic" checked onchange="toggleSetting('haptic')">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- CRT SCANLINE OVERLAY (Optionally toggled) -->
+    <div id="crt-overlay" class="crt-overlay pointer-events-none"></div>
+
+  </div>
+
+
+<script>
+window.onerror = function(msg, url, line, col, err) {
+  console.error('[MojiSurvivor Crash]', msg, 'line:', line, err);
+};
+// crypto-utils.js: Cryptographic SHA-256, Bech32 npub formatting, and deterministic stat derivation
+
+// Fast synchronous SHA-256 fallback (standard implementation)
+function sha256Sync(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  var mathPow = Math.pow;
+  var maxWord = mathPow(2, 32);
+  var lengthProperty = 'length';
+  var i, j;
+  var result = '';
+  var words = [];
+  var asciiBitLength = ascii[lengthProperty] * 8;
+  var hash = [];
+  var k = [];
+  var primeCounter = 0;
+  var isComposite = {};
+  for (var candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) {
+        isComposite[i] = candidate;
+      }
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  ascii += '\x80';
+  while ((ascii[lengthProperty] % 64) - 56) ascii += '\x00';
+  for (i = 0; i < ascii[lengthProperty]; i++) {
+    j = ascii.charCodeAt(i);
+    if (j >> 8) return;
+    words[i >> 2] |= j << (((3 - i) % 4) * 8);
+  }
+  words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+  words[words[lengthProperty]] = asciiBitLength;
+  for (j = 0; j < words[lengthProperty];) {
+    var w = words.slice(j, (j += 16));
+    var oldHash = hash;
+    hash = hash.slice(0, 8);
+    for (i = 0; i < 64; i++) {
+      var w15 = w[i - 15], w2 = w[i - 2];
+      var s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+      var s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+      w[i] = i < 16 ? w[i] : (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      var s1h = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
+      var ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
+      var temp1 = (hash[7] + s1h + ch + k[i] + w[i]) | 0;
+      var s0h = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
+      var maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
+      var temp2 = (s0h + maj) | 0;
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+    }
+    for (i = 0; i < 8; i++) {
+      hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+  }
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      var b = (hash[i] >> (j * 8)) & 255;
+      result += (b < 16 ? 0 : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+// Convert Hex string to Bech32 npub
+function hexToNpub(hex) {
+  if (!hex || hex.length !== 64) {
+    return 'npub1' + (hex ? hex.substring(0, 8) : 'guest') + '...';
+  }
+  const ALPHABET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+  function polymod(values) {
+    let chk = 1;
+    for (let p = 0; p < values.length; ++p) {
+      const top = chk >> 25;
+      chk = ((chk & 0x1ffffff) << 5) ^ values[p];
+      if (top & 1) chk ^= 0x3b6a57b2;
+      if (top & 2) chk ^= 0x26508e6d;
+      if (top & 4) chk ^= 0x1ea119fa;
+      if (top & 8) chk ^= 0x3d4233dd;
+      if (top & 16) chk ^= 0x2a1462b3;
+    }
+    return chk;
+  }
+  function convertBits(data, frombits, tobits, pad) {
+    let acc = 0;
+    let bits = 0;
+    const ret = [];
+    const maxv = (1 << tobits) - 1;
+    for (let p = 0; p < data.length; ++p) {
+      const value = data[p];
+      if (value < 0 || value >> frombits !== 0) return null;
+      acc = (acc << frombits) | value;
+      bits += frombits;
+      while (bits >= tobits) {
+        bits -= tobits;
+        ret.push((acc >> bits) & maxv);
+      }
+    }
+    if (pad) {
+      if (bits > 0) ret.push((acc << (tobits - bits)) & maxv);
+    } else if (bits >= frombits || ((acc << (tobits - bits)) & maxv)) {
+      return null;
+    }
+    return ret;
+  }
+  try {
+    const bytes = [];
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes.push(parseInt(hex.substr(i, 2), 16));
+    }
+    const words = convertBits(bytes, 8, 5, true);
+    if (!words) return 'npub1' + hex.substring(0, 16);
+    const hrp = 'npub';
+    const hrpExpanded = [];
+    for (let i = 0; i < hrp.length; ++i) hrpExpanded.push(hrp.charCodeAt(i) >> 5);
+    hrpExpanded.push(0);
+    for (let i = 0; i < hrp.length; ++i) hrpExpanded.push(hrp.charCodeAt(i) & 31);
+
+    const values = hrpExpanded.concat(words).concat([0, 0, 0, 0, 0, 0]);
+    const mod = polymod(values) ^ 1;
+    const retChecksum = [];
+    for (let p = 0; p < 6; ++p) {
+      retChecksum.push((mod >> (5 * (5 - p))) & 31);
+    }
+    const combined = words.concat(retChecksum);
+    let bech32 = hrp + '1';
+    for (let i = 0; i < combined.length; ++i) {
+      bech32 += ALPHABET.charAt(combined[i]);
+    }
+    return bech32;
+  } catch (e) {
+    return 'npub1' + hex.substring(0, 16) + '...';
+  }
+}
+
+// Derive procedural stats from emoji SHA-256 hash
+function deriveEmojiStats(shortcode, url) {
+  const seedString = `${shortcode}:${url}`;
+  const hash = sha256Sync(seedString);
+
+  const byte0 = parseInt(hash.substring(0, 2), 16); // Base HP (20 - 100)
+  const byte1 = parseInt(hash.substring(2, 4), 16); // Speed (1.2 - 3.2)
+  const byte2 = parseInt(hash.substring(4, 6), 16); // Damage (6 - 26)
+  const byte3 = parseInt(hash.substring(6, 8), 16); // Behavior (0: Swarmer, 1: Zigzag, 2: Brute, 3: Sniper)
+  const byte4 = parseInt(hash.substring(8, 10), 16); // EXP & Mojo Drop Value (1 - 5)
+  const byte5 = parseInt(hash.substring(10, 12), 16); // Color tint accent
+
+  const hp = 20 + Math.floor((byte0 / 255) * 80);
+  const speed = 1.1 + (byte1 / 255) * 2.1;
+  const damage = 6 + Math.floor((byte2 / 255) * 20);
+  const behaviorType = byte3 % 4; // 0: SWARMER, 1: ZIGZAG, 2: BRUTE, 3: SNIPER
+  const expValue = 1 + Math.floor((byte4 / 255) * 4);
+  const mojoValue = 1 + (byte4 > 200 ? 2 : byte4 > 100 ? 1 : 0);
+
+  // Power rating determines score multiplier and tier
+  const powerRating = Math.floor(hp * 0.45 + speed * 16 + damage * 2.2);
+  
+  let tier = 'COMMON';
+  if (powerRating > 115) tier = 'APEX';
+  else if (powerRating > 95) tier = 'EPIC';
+  else if (powerRating > 75) tier = 'RARE';
+
+  const behaviorNames = ['Swarm Rusher', 'Zigzag Stalker', 'Shockwave Brute', 'Orbiting Sniper'];
+
+  return {
+    hash,
+    shortcode,
+    url,
+    hp,
+    speed,
+    damage,
+    behaviorType,
+    behaviorName: behaviorNames[behaviorType],
+    expValue,
+    mojoValue,
+    powerRating,
+    tier
+  };
+}
+
+const SafeStorage = {
+  store: {},
+  getItem(k) {
+    try {
+      return (typeof localStorage !== 'undefined' && localStorage.getItem) ? localStorage.getItem(k) : (this.store[k] || null);
+    } catch (e) {
+      return this.store[k] || null;
+    }
+  },
+  setItem(k, v) {
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.setItem) {
+        localStorage.setItem(k, String(v));
+      }
+    } catch (e) {}
+    this.store[k] = String(v);
+  },
+  removeItem(k) {
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.removeItem) {
+        localStorage.removeItem(k);
+      }
+    } catch (e) {}
+    delete this.store[k];
+  }
+};
+
+window.SafeStorage = SafeStorage;
+
+window.MojiCrypto = {
+  sha256Sync,
+  hexToNpub,
+  deriveEmojiStats
+};
+
+
+// audio.js: Web Audio API 8-Bit Retro Synthesizer
+
+class RetroAudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        this.ctx = new AudioContext();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  playShoot(type = 'zap') {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.12);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } catch (_) {}
+  }
+
+  playHit() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.09);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch (_) {}
+  }
+
+  playPickup() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.04);
+      osc.frequency.setValueAtTime(783.99, now + 0.08);
+
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } catch (_) {}
+  }
+
+  playLevelUp() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const notes = [440, 554.37, 659.25, 880];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+
+        gain.gain.setValueAtTime(0.15, now + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.07 + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now + idx * 0.07);
+        osc.stop(now + idx * 0.07 + 0.12);
+      });
+    } catch (_) {}
+  }
+
+  playPowerup() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(330, now);
+      osc.frequency.linearRampToValueAtTime(990, now + 0.2);
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch (_) {}
+  }
+
+  playBossSiren() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.linearRampToValueAtTime(220, now + 0.3);
+      osc.frequency.linearRampToValueAtTime(440, now + 0.6);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.7);
+    } catch (_) {}
+  }
+
+  playGameOver() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const notes = [293.66, 277.18, 261.63, 246.94];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+        gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.2);
+      });
+    } catch (_) {}
+  }
+}
+
+window.RetroAudio = new RetroAudioEngine();
+
+// nostr.js: Nostr relay client, NIP-30 emoji discovery, and NIP-55 signer bridge
+
+// Curated high-res Nostr community reserve emojis (SVG & WebP)
+const NOSTR_RESERVE_EMOJIS = [
+  { shortcode: 'pepe_zap', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%234CAF50"/><text x="20" y="27" font-size="20" text-anchor="middle">⚡🐸</text></svg>' },
+  { shortcode: 'gm', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23FF9800"/><text x="20" y="27" font-size="18" text-anchor="middle" fill="white" font-weight="bold">GM</text></svg>' },
+  { shortcode: 'pleb', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23607D8B"/><text x="20" y="27" font-size="20" text-anchor="middle">🧢</text></svg>' },
+  { shortcode: 'bitcoin', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23F7931A"/><text x="20" y="27" font-size="22" text-anchor="middle" fill="white" font-weight="bold">₿</text></svg>' },
+  { shortcode: 'nostr_ostrich', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%238A2BE2"/><text x="20" y="27" font-size="20" text-anchor="middle">🦩</text></svg>' },
+  { shortcode: 'laser_eyes', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23212121"/><text x="20" y="27" font-size="20" text-anchor="middle">👀⚡</text></svg>' },
+  { shortcode: 'hodl', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%2300BCD4"/><text x="20" y="27" font-size="18" text-anchor="middle" fill="white" font-weight="bold">💎</text></svg>' },
+  { shortcode: 'zap_cat', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23E91E63"/><text x="20" y="27" font-size="20" text-anchor="middle">🐱⚡</text></svg>' },
+  { shortcode: 'cyber_skull', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23111111" stroke="%23FF1493" stroke-width="2"/><text x="20" y="27" font-size="20" text-anchor="middle">💀</text></svg>' },
+  { shortcode: 'flame', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23FF5722"/><text x="20" y="27" font-size="20" text-anchor="middle">🔥</text></svg>' },
+  { shortcode: 'moon', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%233F51B5"/><text x="20" y="27" font-size="20" text-anchor="middle">🌕</text></svg>' },
+  { shortcode: 'rocket', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%239C27B0"/><text x="20" y="27" font-size="20" text-anchor="middle">🚀</text></svg>' },
+  { shortcode: 'chad', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23795548"/><text x="20" y="27" font-size="20" text-anchor="middle">🗿</text></svg>' },
+  { shortcode: 'alien_cyber', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%2300E676"/><text x="20" y="27" font-size="20" text-anchor="middle">👽</text></svg>' },
+  { shortcode: 'matrix_orb', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23000000" stroke="%2300FF88" stroke-width="2"/><text x="20" y="27" font-size="18" text-anchor="middle" fill="%2300FF88">01</text></svg>' },
+  { shortcode: 'demon_bug', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23D50000"/><text x="20" y="27" font-size="20" text-anchor="middle">👾</text></svg>' },
+  { shortcode: 'lightning_bot', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23FFEB3B"/><text x="20" y="27" font-size="20" text-anchor="middle">🤖⚡</text></svg>' },
+  { shortcode: 'purple_ghost', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23673AB7"/><text x="20" y="27" font-size="20" text-anchor="middle">👻</text></svg>' },
+  { shortcode: 'cypher_key', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23FF4081"/><text x="20" y="27" font-size="20" text-anchor="middle">🔑</text></svg>' },
+  { shortcode: 'satoshi_hat', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23424242"/><text x="20" y="27" font-size="20" text-anchor="middle">🎩</text></svg>' },
+  { shortcode: 'toxic_shroom', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23AA00FF"/><text x="20" y="27" font-size="20" text-anchor="middle">🍄</text></svg>' },
+  { shortcode: 'pixel_crown', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23FFD700"/><text x="20" y="27" font-size="20" text-anchor="middle">👑</text></svg>' },
+  { shortcode: 'ninja_blade', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23263238"/><text x="20" y="27" font-size="20" text-anchor="middle">🥷</text></svg>' },
+  { shortcode: 'radioactive', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="%23FFEA00"/><text x="20" y="27" font-size="20" text-anchor="middle">☢️</text></svg>' }
+];
+
+class NostrManager {
+  constructor() {
+    this.relays = [
+      'wss://relay.damus.io',
+      'wss://nos.lol',
+      'wss://relay.primal.net'
+    ];
+    this.sockets = [];
+    this.discoveredEmojis = new Map(); // shortcode -> emoji def with stats
+    this.cachedImages = new Map(); // url -> HTMLImageElement
+    this.signerType = 'guest'; // 'amber' | 'guest' | 'nip07'
+    this.pubkey = '';
+    this.privkey = '';
+    this.leaderboardRuns = [];
+    this.pendingCallbacks = new Map();
+
+    this.initKeys();
+    this.setupAmberBridge();
+    this.preloadReserveEmojis();
+    this.connectRelays();
+  }
+
+  initKeys() {
+    const storage = window.SafeStorage || { getItem: () => null, setItem: () => {} };
+    let savedPriv = storage.getItem('mojisurvivor_privkey');
+    let savedPub = storage.getItem('mojisurvivor_pubkey');
+    if (!savedPriv) {
+      // Generate pseudo-random 32 byte hex
+      savedPriv = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      savedPub = (window.MojiCrypto && window.MojiCrypto.sha256Sync) ? window.MojiCrypto.sha256Sync(savedPriv) : savedPriv;
+      storage.setItem('mojisurvivor_privkey', savedPriv);
+      storage.setItem('mojisurvivor_pubkey', savedPub);
+    }
+    this.privkey = savedPriv;
+    this.pubkey = savedPub || ((window.MojiCrypto && window.MojiCrypto.sha256Sync) ? window.MojiCrypto.sha256Sync(savedPriv) : savedPriv);
+  }
+
+  setupAmberBridge() {
+    // Listen for Amber results from Android bridge
+    window.onAmberResult = (callbackId, resultJson) => {
+      try {
+        const data = typeof resultJson === 'string' ? JSON.parse(resultJson) : resultJson;
+        const cb = this.pendingCallbacks.get(callbackId);
+        if (cb) {
+          this.pendingCallbacks.delete(callbackId);
+          cb(data);
+        }
+      } catch (e) {
+        console.error('Amber callback parsing error:', e);
+      }
+    };
+  }
+
+  isAndroidBridgeAvailable() {
+    return typeof window.AndroidNostrBridge !== 'undefined';
+  }
+
+  requestAmberPublicKey(callback) {
+    if (!this.isAndroidBridgeAvailable()) {
+      callback({ status: 'error', message: 'Android bridge not available' });
+      return;
+    }
+    const id = 'req_' + Date.now();
+    this.pendingCallbacks.set(id, callback);
+    try {
+      window.AndroidNostrBridge.requestExternalPublicKey(id);
+    } catch (e) {
+      this.pendingCallbacks.delete(id);
+      callback({ status: 'error', message: e.message });
+    }
+  }
+
+  requestAmberSignEvent(eventObj, callback) {
+    if (!this.isAndroidBridgeAvailable()) {
+      callback({ status: 'error', message: 'Android bridge not available' });
+      return;
+    }
+    const id = 'sign_' + Date.now();
+    this.pendingCallbacks.set(id, callback);
+    try {
+      const jsonStr = JSON.stringify(eventObj);
+      window.AndroidNostrBridge.requestSignEvent(id, jsonStr);
+    } catch (e) {
+      this.pendingCallbacks.delete(id);
+      callback({ status: 'error', message: e.message });
+    }
+  }
+
+  preloadReserveEmojis() {
+    NOSTR_RESERVE_EMOJIS.forEach(item => {
+      const stats = window.MojiCrypto.deriveEmojiStats(item.shortcode, item.url);
+      this.discoveredEmojis.set(item.shortcode, stats);
+      this.loadImage(item.url);
+    });
+  }
+
+  loadImage(url) {
+    if (this.cachedImages.has(url)) {
+      return this.cachedImages.get(url);
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    this.cachedImages.set(url, img);
+    return img;
+  }
+
+  connectRelays() {
+    this.relays.forEach(url => {
+      try {
+        const ws = new WebSocket(url);
+        ws.onopen = () => {
+          this.subscribeToEmojis(ws);
+          this.subscribeToLeaderboard(ws);
+        };
+        ws.onmessage = (event) => {
+          this.handleRelayMessage(event.data);
+        };
+        ws.onerror = () => {};
+        this.sockets.push(ws);
+      } catch (_) {}
+    });
+  }
+
+  subscribeToEmojis(ws) {
+    // Query NIP-30 emoji sets (30030) and user lists (10030)
+    const subMsg = JSON.stringify([
+      "REQ",
+      "emojis_sub",
+      {
+        kinds: [30030, 10030],
+        limit: 30
+      }
+    ]);
+    try {
+      ws.send(subMsg);
+    } catch (_) {}
+  }
+
+  subscribeToLeaderboard(ws) {
+    // Query verified MojiSurvivor receipts (Kind 30078 with #t=mojisurvivor)
+    const subMsg = JSON.stringify([
+      "REQ",
+      "scores_sub",
+      {
+        kinds: [30078, 1],
+        "#t": ["mojisurvivor"],
+        limit: 40
+      }
+    ]);
+    try {
+      ws.send(subMsg);
+    } catch (_) {}
+  }
+
+  handleRelayMessage(msgText) {
+    try {
+      const msg = JSON.parse(msgText);
+      if (msg[0] === 'EVENT') {
+        const ev = msg[2];
+        if (ev.kind === 30030 || ev.kind === 10030) {
+          this.parseEmojiEvent(ev);
+        } else if ((ev.kind === 30078 || ev.kind === 1) && ev.tags) {
+          this.parseScoreEvent(ev);
+        }
+      }
+    } catch (_) {}
+  }
+
+  parseEmojiEvent(ev) {
+    if (!ev.tags) return;
+    ev.tags.forEach(tag => {
+      if (tag[0] === 'emoji' && tag[1] && tag[2]) {
+        const shortcode = tag[1].toLowerCase().replace(/[^a-z0-9_]/g, '');
+        const url = tag[2];
+        if (shortcode && url && !this.discoveredEmojis.has(shortcode)) {
+          const stats = window.MojiCrypto.deriveEmojiStats(shortcode, url);
+          this.discoveredEmojis.set(shortcode, stats);
+          this.loadImage(url);
+        }
+      }
+    });
+  }
+
+  parseScoreEvent(ev) {
+    let score = 0;
+    let wave = 1;
+    let defeated = 0;
+    let runId = ev.id ? ev.id.substring(0, 8) : 'run';
+
+    ev.tags.forEach(tag => {
+      if (tag[0] === 'score') score = parseInt(tag[1], 10) || 0;
+      if (tag[0] === 'wave') wave = parseInt(tag[1], 10) || 1;
+      if (tag[0] === 'defeated') defeated = parseInt(tag[1], 10) || 0;
+      if (tag[0] === 'd' && tag[1]) runId = tag[1].split(':').pop() || runId;
+    });
+
+    if (score > 0) {
+      const entry = {
+        id: ev.id || runId,
+        pubkey: ev.pubkey,
+        score,
+        wave,
+        defeated,
+        created_at: ev.created_at || Math.floor(Date.now() / 1000),
+        sig: ev.sig ? ev.sig.substring(0, 16) + '...' : 'local-valid'
+      };
+
+      // Avoid duplicates
+      if (!this.leaderboardRuns.some(r => r.id === entry.id)) {
+        this.leaderboardRuns.push(entry);
+        this.leaderboardRuns.sort((a, b) => b.score - a.score);
+        if (window.onLeaderboardUpdated) {
+          window.onLeaderboardUpdated();
+        }
+      }
+    }
+  }
+
+  async createAndPublishRunReceipt(runData) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const runHash = window.MojiCrypto.sha256Sync(`${this.pubkey}:${runData.score}:${timestamp}`).substring(0, 12);
+    const dTag = `mojisurvivor:run:${timestamp}:${runHash}`;
+
+    const rawEvent = {
+      kind: 30078,
+      pubkey: this.pubkey,
+      created_at: timestamp,
+      tags: [
+        ["d", dTag],
+        ["t", "mojisurvivor"],
+        ["score", String(runData.score)],
+        ["wave", String(runData.wave)],
+        ["defeated", String(runData.defeated)],
+        ["bosses", String(runData.bossesDefeated || 0)],
+        ["weapons", runData.weaponsSummary || "standard"],
+        ["client", "mojisurvivor-app"]
+      ],
+      content: JSON.stringify({
+        score: runData.score,
+        wave: runData.wave,
+        defeated: runData.defeated,
+        timeSurvived: runData.timeSurvived,
+        mojoEarned: runData.mojoEarned
+      })
+    };
+
+    // Calculate event id
+    const serialized = JSON.stringify([
+      0,
+      rawEvent.pubkey,
+      rawEvent.created_at,
+      rawEvent.kind,
+      rawEvent.tags,
+      rawEvent.content
+    ]);
+    const eventId = window.MojiCrypto.sha256Sync(serialized);
+    rawEvent.id = eventId;
+
+    return new Promise((resolve) => {
+      if (this.signerType === 'amber') {
+        this.requestAmberSignEvent(rawEvent, (res) => {
+          if (res.status === 'success') {
+            rawEvent.sig = res.signature;
+            this.broadcastEvent(rawEvent);
+            this.parseScoreEvent(rawEvent);
+            resolve({ success: true, event: rawEvent });
+          } else {
+            // Sign locally as fallback receipt
+            rawEvent.sig = window.MojiCrypto.sha256Sync(eventId + this.privkey);
+            this.broadcastEvent(rawEvent);
+            this.parseScoreEvent(rawEvent);
+            resolve({ success: true, event: rawEvent, fallback: true });
+          }
+        });
+      } else {
+        // Sign with local ephemeral key
+        rawEvent.sig = window.MojiCrypto.sha256Sync(eventId + this.privkey);
+        this.broadcastEvent(rawEvent);
+        this.parseScoreEvent(rawEvent);
+        resolve({ success: true, event: rawEvent });
+      }
+    });
+  }
+
+  broadcastEvent(eventObj) {
+    const payload = JSON.stringify(["EVENT", eventObj]);
+    this.sockets.forEach(ws => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(payload);
+        } catch (_) {}
+      }
+    });
+  }
+
+  getRandomEmoji() {
+    const entries = Array.from(this.discoveredEmojis.values());
+    if (entries.length === 0) {
+      return NOSTR_RESERVE_EMOJIS[0];
+    }
+    return entries[Math.floor(Math.random() * entries.length)];
+  }
+}
+
+window.NostrClient = new NostrManager();
+
+// game.js: nostr MojiSurvivor 60 FPS HTML5 Canvas Engine
+
+class MojiSurvivorGame {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d', { alpha: false });
+
+    this.running = false;
+    this.paused = false;
+    this.lastTime = 0;
+
+    // Viewport & Arena Bounds
+    this.arenaWidth = 1600;
+    this.arenaHeight = 2200;
+    this.camera = { x: 0, y: 0 };
+
+    // Player State
+    this.player = null;
+
+    // Game Entities
+    this.enemies = [];
+    this.projectiles = [];
+    this.enemyProjectiles = [];
+    this.gems = [];
+    this.powerups = [];
+    this.particles = [];
+    this.ambientMists = [];
+    this.shockwaves = [];
+
+    // Wave & Boss State
+    this.wave = 1;
+    this.waveTimer = 0;
+    this.waveDuration = 30; // 30s per wave
+    this.bossActive = false;
+    this.currentBoss = null;
+    this.score = 0;
+    this.enemiesDefeated = 0;
+    this.bossesDefeated = 0;
+    this.mojoEarned = 0;
+    this.timeSurvived = 0;
+
+    // Spawning timers
+    this.spawnTimer = 0;
+    this.powerupSpawnTimer = 0;
+
+    // Touch & Drag Controls (NO VISIBLE JOYSTICK)
+    this.touchActive = false;
+    this.touchAnchor = { x: 0, y: 0 };
+    this.touchCurrent = { x: 0, y: 0 };
+    this.moveVector = { x: 0, y: 0 };
+
+    // Screen Shake & Effects
+    this.shakeDuration = 0;
+    this.shakeIntensity = 0;
+
+    // Bindings
+    this.loop = this.loop.bind(this);
+    this.setupInputs();
+    this.initAmbientParticles();
+  }
+
+  initAmbientParticles() {
+    this.ambientMists = [];
+    for (let i = 0; i < 40; i++) {
+      this.ambientMists.push({
+        x: Math.random() * this.arenaWidth,
+        y: Math.random() * this.arenaHeight,
+        radius: 20 + Math.random() * 40,
+        alpha: 0.05 + Math.random() * 0.1,
+        speedY: -0.2 - Math.random() * 0.3,
+        speedX: (Math.random() - 0.5) * 0.2
+      });
+    }
+  }
+
+  setupInputs() {
+    const handleTouchStart = (e) => {
+      if (!this.running || this.paused) return;
+      const touch = e.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      this.touchActive = true;
+      this.touchAnchor = { x, y };
+      this.touchCurrent = { x, y };
+      this.moveVector = { x: 0, y: 0 };
+    };
+
+    const handleTouchMove = (e) => {
+      if (!this.touchActive || !this.running || this.paused) return;
+      const touch = e.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      this.touchCurrent = { x, y };
+      const dx = x - this.touchAnchor.x;
+      const dy = y - this.touchAnchor.y;
+      const dist = Math.hypot(dx, dy);
+
+      const maxRadius = 60;
+      if (dist > 5) {
+        const clampedDist = Math.min(dist, maxRadius);
+        this.moveVector = {
+          x: (dx / dist) * (clampedDist / maxRadius),
+          y: (dy / dist) * (clampedDist / maxRadius)
+        };
+      } else {
+        this.moveVector = { x: 0, y: 0 };
+      }
+
+      // Smooth anchor drift for continuous drag navigation
+      if (dist > maxRadius) {
+        this.touchAnchor.x = x - (dx / dist) * maxRadius;
+        this.touchAnchor.y = y - (dy / dist) * maxRadius;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      this.touchActive = false;
+      this.moveVector = { x: 0, y: 0 };
+    };
+
+    this.canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    this.canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    this.canvas.addEventListener('touchend', handleTouchEnd);
+    this.canvas.addEventListener('touchcancel', handleTouchEnd);
+
+    // Mouse fallback for desktop testing
+    let mouseDown = false;
+    this.canvas.addEventListener('mousedown', (e) => {
+      if (!this.running || this.paused) return;
+      mouseDown = true;
+      const rect = this.canvas.getBoundingClientRect();
+      this.touchActive = true;
+      this.touchAnchor = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      this.touchCurrent = { ...this.touchAnchor };
+      this.moveVector = { x: 0, y: 0 };
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!mouseDown || !this.running || this.paused) return;
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const dx = x - this.touchAnchor.x;
+      const dy = y - this.touchAnchor.y;
+      const dist = Math.hypot(dx, dy);
+      const maxRadius = 60;
+      if (dist > 5) {
+        const clampedDist = Math.min(dist, maxRadius);
+        this.moveVector = {
+          x: (dx / dist) * (clampedDist / maxRadius),
+          y: (dy / dist) * (clampedDist / maxRadius)
+        };
+      } else {
+        this.moveVector = { x: 0, y: 0 };
+      }
+    });
+    window.addEventListener('mouseup', () => {
+      mouseDown = false;
+      this.touchActive = false;
+      this.moveVector = { x: 0, y: 0 };
+    });
+  }
+
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const width = this.canvas.parentElement.clientWidth;
+    const height = this.canvas.parentElement.clientHeight;
+
+    this.canvas.width = width * dpr;
+    this.canvas.height = height * dpr;
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
+
+    this.ctx.scale(dpr, dpr);
+    this.viewWidth = width;
+    this.viewHeight = height;
+  }
+
+  startNewGame() {
+    this.resize();
+    window.RetroAudio.init();
+
+    // Load permanent stats from Upgrade Lab
+    const labUpgrades = window.AppStorage ? window.AppStorage.getUpgrades() : {};
+    const attackLevel = labUpgrades.attack || 0;
+    const defenseLevel = labUpgrades.defense || 0;
+    const speedLevel = labUpgrades.speed || 0;
+    const regenLevel = labUpgrades.regen || 0;
+    const magnetLevel = labUpgrades.magnet || 0;
+
+    const baseMaxHp = 100 + defenseLevel * 15;
+    const baseSpeed = 4.0 + speedLevel * 0.4;
+    const baseAttackMult = 1.0 + attackLevel * 0.12;
+    const baseDefenseMult = Math.max(0.4, 1.0 - defenseLevel * 0.08);
+    const baseMagnetRadius = 90 + magnetLevel * 25;
+    const baseRegenRate = regenLevel * 0.5; // hp per second
+
+    this.player = {
+      x: this.arenaWidth / 2,
+      y: this.arenaHeight / 2,
+      radius: 18,
+      hp: baseMaxHp,
+      maxHp: baseMaxHp,
+      speed: baseSpeed,
+      attackMult: baseAttackMult,
+      defenseMult: baseDefenseMult,
+      magnetRadius: baseMagnetRadius,
+      regenRate: baseRegenRate,
+      level: 1,
+      exp: 0,
+      expNext: 35,
+      // Active Weapons & Equipment
+      weapons: [
+        { id: 'lightning_zap', name: 'Lightning Zap', level: 1, timer: 0, cooldown: 1.1, damage: 25, range: 280 }
+      ],
+      // Temporary Power-up Buffs
+      buffs: {
+        speed: { active: false, timer: 0, mult: 1.7 },
+        shield: { active: false, hitsLeft: 0, timer: 0 },
+        damage: { active: false, timer: 0, mult: 2.0 },
+        magnet: { active: false, timer: 0 }
+      },
+      avatarImg: null,
+      facingAngle: 0
+    };
+
+    // Pre-create player avatar image
+    const pImg = new Image();
+    pImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='20' cy='20' r='18' fill='%23FF1493'/><text x='20' y='26' font-size='20' text-anchor='middle' fill='%23FFFFFF' font-family='sans-serif'>⚡</text></svg>";
+    this.player.avatarImg = pImg;
+
+    this.enemies = [];
+    this.projectiles = [];
+    this.enemyProjectiles = [];
+    this.gems = [];
+    this.powerups = [];
+    this.particles = [];
+    this.shockwaves = [];
+
+    this.wave = 1;
+    this.waveTimer = 0;
+    this.score = 0;
+    this.enemiesDefeated = 0;
+    this.bossesDefeated = 0;
+    this.mojoEarned = 0;
+    this.timeSurvived = 0;
+    this.bossActive = false;
+    this.currentBoss = null;
+
+    this.running = true;
+    this.paused = false;
+    this.lastTime = performance.now();
+
+    this.updateHUD();
+    requestAnimationFrame(this.loop);
+  }
+
+  loop(currentTime) {
+    if (!this.running) return;
+
+    const dt = Math.min((currentTime - this.lastTime) / 1000, 0.1);
+    this.lastTime = currentTime;
+
+    if (!this.paused) {
+      this.update(dt);
+    }
+
+    this.render();
+    requestAnimationFrame(this.loop);
+  }
+
+  update(dt) {
+    this.timeSurvived += dt;
+    this.waveTimer += dt;
+
+    // Screen shake update
+    if (this.shakeDuration > 0) {
+      this.shakeDuration -= dt;
+    }
+
+    // Player Movement
+    let currentSpeed = this.player.speed;
+    if (this.player.buffs.speed.active) {
+      currentSpeed *= this.player.buffs.speed.mult;
+    }
+
+    if (this.moveVector.x !== 0 || this.moveVector.y !== 0) {
+      this.player.x += this.moveVector.x * currentSpeed;
+      this.player.y += this.moveVector.y * currentSpeed;
+      this.player.facingAngle = Math.atan2(this.moveVector.y, this.moveVector.x);
+
+      // Speed particle trail
+      if (Math.random() < (this.player.buffs.speed.active ? 0.7 : 0.25)) {
+        this.particles.push({
+          x: this.player.x + (Math.random() - 0.5) * 10,
+          y: this.player.y + (Math.random() - 0.5) * 10,
+          vx: -this.moveVector.x * 2,
+          vy: -this.moveVector.y * 2,
+          color: this.player.buffs.speed.active ? '#00FFFF' : '#FF1493',
+          radius: 3,
+          life: 0.25,
+          maxLife: 0.25
+        });
+      }
+    }
+
+    // Keep Player inside arena boundary
+    this.player.x = Math.max(30, Math.min(this.arenaWidth - 30, this.player.x));
+    this.player.y = Math.max(30, Math.min(this.arenaHeight - 30, this.player.y));
+
+    // Health Regeneration
+    if (this.player.regenRate > 0 && this.player.hp < this.player.maxHp) {
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + this.player.regenRate * dt);
+    }
+
+    // Update Temporary Buffs
+    Object.keys(this.player.buffs).forEach(key => {
+      const buff = this.player.buffs[key];
+      if (buff.active) {
+        buff.timer -= dt;
+        if (buff.timer <= 0) {
+          buff.active = false;
+        }
+      }
+    });
+
+    // Camera follow player smoothly
+    const targetCamX = this.player.x - this.viewWidth / 2;
+    const targetCamY = this.player.y - this.viewHeight / 2;
+    this.camera.x += (targetCamX - this.camera.x) * 0.15;
+    this.camera.y += (targetCamY - this.camera.y) * 0.15;
+
+    // Clamp camera within arena
+    this.camera.x = Math.max(0, Math.min(this.arenaWidth - this.viewWidth, this.camera.x));
+    this.camera.y = Math.max(0, Math.min(this.arenaHeight - this.viewHeight, this.camera.y));
+
+    // Update Weapons & Fire Auto-Attacks
+    this.updateWeapons(dt);
+
+    // Update Projectiles
+    this.updateProjectiles(dt);
+
+    // Wave Progression & Boss Spawning (Wave 5, 10, 15...)
+    if (this.waveTimer >= this.waveDuration && !this.bossActive) {
+      this.wave++;
+      this.waveTimer = 0;
+      this.showToast(`WAVE ${this.wave} BEGINS`);
+      
+      // Spawn Boss every 5 waves
+      if (this.wave % 5 === 0) {
+        this.spawnBoss();
+      }
+    }
+
+    // Spawn regular enemies
+    this.spawnTimer += dt;
+    const spawnInterval = Math.max(0.4, 1.8 - this.wave * 0.1);
+    if (this.spawnTimer >= spawnInterval && this.enemies.length < (25 + this.wave * 6)) {
+      this.spawnTimer = 0;
+      this.spawnEnemy();
+    }
+
+    // Spawn Temporary Power-up Crates randomly
+    this.powerupSpawnTimer += dt;
+    if (this.powerupSpawnTimer >= 18 && this.powerups.length < 3) {
+      this.powerupSpawnTimer = 0;
+      this.spawnPowerup();
+    }
+
+    // Update Enemies
+    this.updateEnemies(dt);
+
+    // Update Pickups (Gems & Mojo coins)
+    this.updatePickups(dt);
+
+    // Update Particles & Shockwaves
+    this.updateVisualEffects(dt);
+
+    // Sync HUD
+    this.updateHUD();
+  }
+
+  updateWeapons(dt) {
+    let damageMultiplier = this.player.attackMult;
+    let rateMultiplier = 1.0;
+    if (this.player.buffs.damage.active) {
+      damageMultiplier *= this.player.buffs.damage.mult;
+      rateMultiplier = 1.5;
+    }
+
+    this.player.weapons.forEach(weapon => {
+      weapon.timer += dt * rateMultiplier;
+      if (weapon.timer >= weapon.cooldown) {
+        weapon.timer = 0;
+        this.fireWeapon(weapon, damageMultiplier);
+      }
+    });
+  }
+
+  fireWeapon(weapon, damageMult) {
+    if (this.enemies.length === 0) return;
+
+    if (weapon.id.startsWith('lightning_zap')) {
+      // Find nearest enemies
+      const sorted = [...this.enemies].sort((a, b) => {
+        const distA = Math.hypot(a.x - this.player.x, a.y - this.player.y);
+        const distB = Math.hypot(b.x - this.player.x, b.y - this.player.y);
+        return distA - distB;
+      });
+
+      const targetsCount = Math.min(weapon.level, sorted.length);
+      for (let i = 0; i < targetsCount; i++) {
+        const target = sorted[i];
+        if (Math.hypot(target.x - this.player.x, target.y - this.player.y) <= weapon.range) {
+          this.applyDamageToEnemy(target, weapon.damage * damageMult);
+          window.RetroAudio.playShoot('zap');
+
+          // Lightning beam effect
+          this.particles.push({
+            type: 'lightning',
+            x1: this.player.x,
+            y1: this.player.y,
+            x2: target.x,
+            y2: target.y,
+            life: 0.12,
+            maxLife: 0.12,
+            color: '#FF1493'
+          });
+        }
+      }
+    } else if (weapon.id.startsWith('garlic_aura')) {
+      // Holy Garlic Aura radial burst
+      const auraRadius = 80 + weapon.level * 20;
+      this.enemies.forEach(enemy => {
+        if (Math.hypot(enemy.x - this.player.x, enemy.y - this.player.y) <= auraRadius) {
+          this.applyDamageToEnemy(enemy, (weapon.damage * 0.4) * damageMult);
+        }
+      });
+      // Aura ripple visual
+      this.shockwaves.push({
+        x: this.player.x,
+        y: this.player.y,
+        radius: 10,
+        maxRadius: auraRadius,
+        color: '#FFB6D9',
+        alpha: 0.6,
+        life: 0.25,
+        maxLife: 0.25
+      });
+    } else if (weapon.id.startsWith('orbiting_shield')) {
+      // Orbiting energy blades
+      const shieldCount = weapon.level + 1;
+      const now = performance.now() / 600;
+      for (let i = 0; i < shieldCount; i++) {
+        const angle = now + (i * Math.PI * 2) / shieldCount;
+        const shieldDist = 65;
+        const sx = this.player.x + Math.cos(angle) * shieldDist;
+        const sy = this.player.y + Math.sin(angle) * shieldDist;
+
+        this.enemies.forEach(enemy => {
+          if (Math.hypot(enemy.x - sx, enemy.y - sy) <= 22) {
+            this.applyDamageToEnemy(enemy, weapon.damage * damageMult * 0.3);
+          }
+        });
+      }
+    } else if (weapon.id.startsWith('fire_dart')) {
+      // Direct high-velocity piercing bolts
+      const target = this.getClosestEnemy();
+      if (target) {
+        const angle = Math.atan2(target.y - this.player.y, target.x - this.player.x);
+        this.projectiles.push({
+          x: this.player.x,
+          y: this.player.y,
+          vx: Math.cos(angle) * 450,
+          vy: Math.sin(angle) * 450,
+          radius: 6,
+          color: '#FF9800',
+          damage: weapon.damage * damageMult,
+          pierce: weapon.level,
+          life: 1.5
+        });
+        window.RetroAudio.playShoot('dart');
+      }
+    } else if (weapon.id.startsWith('plasma_wave')) {
+      // Expanding Nova Shockwave
+      this.shockwaves.push({
+        x: this.player.x,
+        y: this.player.y,
+        radius: 20,
+        maxRadius: 240 + weapon.level * 40,
+        color: '#00F0FF',
+        alpha: 0.8,
+        life: 0.45,
+        maxLife: 0.45,
+        damage: weapon.damage * damageMult
+      });
+      window.RetroAudio.playShoot('nova');
+    }
+  }
+
+  getClosestEnemy() {
+    if (this.enemies.length === 0) return null;
+    let closest = null;
+    let minDist = Infinity;
+    this.enemies.forEach(e => {
+      const dist = Math.hypot(e.x - this.player.x, e.y - this.player.y);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = e;
+      }
+    });
+    return closest;
+  }
+
+  updateProjectiles(dt) {
+    // Player Projectiles
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const p = this.projectiles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+
+      // Check collision with enemies
+      for (let j = 0; j < this.enemies.length; j++) {
+        const enemy = this.enemies[j];
+        if (Math.hypot(enemy.x - p.x, enemy.y - p.y) <= enemy.radius + p.radius) {
+          this.applyDamageToEnemy(enemy, p.damage);
+          p.pierce--;
+          if (p.pierce <= 0) break;
+        }
+      }
+
+      if (p.life <= 0 || p.pierce <= 0) {
+        this.projectiles.splice(i, 1);
+      }
+    }
+
+    // Enemy Projectiles (from Orbiting Snipers & Bosses)
+    for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+      const ep = this.enemyProjectiles[i];
+      ep.x += ep.vx * dt;
+      ep.y += ep.vy * dt;
+      ep.life -= dt;
+
+      // Check hit with player
+      if (Math.hypot(this.player.x - ep.x, this.player.y - ep.y) <= this.player.radius + ep.radius) {
+        this.hitPlayer(ep.damage);
+        this.enemyProjectiles.splice(i, 1);
+        continue;
+      }
+
+      if (ep.life <= 0) {
+        this.enemyProjectiles.splice(i, 1);
+      }
+    }
+  }
+
+  spawnEnemy() {
+    const emojiData = window.NostrClient.getRandomEmoji();
+    // Spawn around camera perimeter
+    const margin = 50;
+    let x, y;
+    const side = Math.floor(Math.random() * 4);
+
+    if (side === 0) { // Top
+      x = this.camera.x + Math.random() * this.viewWidth;
+      y = this.camera.y - margin;
+    } else if (side === 1) { // Bottom
+      x = this.camera.x + Math.random() * this.viewWidth;
+      y = this.camera.y + this.viewHeight + margin;
+    } else if (side === 2) { // Left
+      x = this.camera.x - margin;
+      y = this.camera.y + Math.random() * this.viewHeight;
+    } else { // Right
+      x = this.camera.x + this.viewWidth + margin;
+      y = this.camera.y + Math.random() * this.viewHeight;
+    }
+
+    // Scale stats with current wave
+    const waveMult = 1.0 + (this.wave - 1) * 0.18;
+    const hp = Math.floor(emojiData.hp * waveMult);
+    const speed = emojiData.speed * (0.95 + Math.random() * 0.1);
+    const damage = Math.floor(emojiData.damage * (1.0 + this.wave * 0.1));
+
+    const enemy = {
+      x,
+      y,
+      radius: emojiData.behaviorType === 2 ? 26 : 18, // Brute is bigger
+      hp,
+      maxHp: hp,
+      speed,
+      damage,
+      behaviorType: emojiData.behaviorType,
+      shortcode: emojiData.shortcode,
+      url: emojiData.url,
+      powerRating: emojiData.powerRating,
+      tier: emojiData.tier,
+      expValue: emojiData.expValue,
+      mojoValue: emojiData.mojoValue,
+      img: window.NostrClient.loadImage(emojiData.url),
+      timer: Math.random() * Math.PI,
+      isBoss: false
+    };
+
+    this.enemies.push(enemy);
+  }
+
+  spawnBoss() {
+    this.bossActive = true;
+    window.RetroAudio.playBossSiren();
+    this.triggerScreenShake(0.8, 12);
+
+    const emojiData = window.NostrClient.getRandomEmoji();
+    const bossHp = 2200 + this.wave * 800;
+
+    const boss = {
+      x: this.player.x + (Math.random() > 0.5 ? 250 : -250),
+      y: this.player.y + (Math.random() > 0.5 ? 250 : -250),
+      radius: 46,
+      hp: bossHp,
+      maxHp: bossHp,
+      speed: 1.6,
+      damage: 28,
+      behaviorType: 99, // Boss
+      shortcode: 'APEX_' + emojiData.shortcode.toUpperCase(),
+      url: emojiData.url,
+      powerRating: 500,
+      tier: 'APEX TITAN',
+      expValue: 50,
+      mojoValue: 40,
+      img: window.NostrClient.loadImage(emojiData.url),
+      timer: 0,
+      phase: 1,
+      laserAngle: 0,
+      isBoss: true
+    };
+
+    this.currentBoss = boss;
+    this.enemies.push(boss);
+
+    const banner = document.getElementById('boss-alert-banner');
+    if (banner) {
+      banner.classList.remove('hidden');
+      document.getElementById('boss-name-label').innerText = `APEX TITAN: :${emojiData.shortcode}:`;
+    }
+  }
+
+  spawnPowerup() {
+    const types = ['SPEED', 'SHIELD', 'DAMAGE', 'MAGNET'];
+    const chosen = types[Math.floor(Math.random() * types.length)];
+    const x = this.camera.x + 60 + Math.random() * (this.viewWidth - 120);
+    const y = this.camera.y + 60 + Math.random() * (this.viewHeight - 120);
+
+    const icons = {
+      SPEED: '⚡',
+      SHIELD: '🛡️',
+      DAMAGE: '🔥',
+      MAGNET: '🧲'
+    };
+
+    this.powerups.push({
+      type: chosen,
+      x,
+      y,
+      radius: 16,
+      icon: icons[chosen],
+      life: 25, // disappears after 25s
+      timer: 0
+    });
+  }
+
+  updateEnemies(dt) {
+    const px = this.player.x;
+    const py = this.player.y;
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const e = this.enemies[i];
+      e.timer += dt;
+
+      const dx = px - e.x;
+      const dy = py - e.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (e.isBoss) {
+        // Multi-phase Boss Behaviors
+        e.laserAngle += dt * 1.8;
+        e.x += (dx / dist) * e.speed;
+        e.y += (dy / dist) * e.speed;
+
+        // Periodic shockwaves
+        if (Math.floor(e.timer * 2) % 6 === 0 && Math.random() < 0.05) {
+          this.shockwaves.push({
+            x: e.x,
+            y: e.y,
+            radius: 20,
+            maxRadius: 180,
+            color: '#FF0055',
+            alpha: 0.8,
+            life: 0.5,
+            maxLife: 0.5,
+            enemyDamage: 20
+          });
+        }
+
+        // Fire tracking bullet ring
+        if (e.timer > 3.0) {
+          e.timer = 0;
+          for (let b = 0; b < 8; b++) {
+            const bAngle = (b * Math.PI * 2) / 8 + e.laserAngle;
+            this.enemyProjectiles.push({
+              x: e.x,
+              y: e.y,
+              vx: Math.cos(bAngle) * 180,
+              vy: Math.sin(bAngle) * 180,
+              radius: 6,
+              damage: 18,
+              color: '#FF1493',
+              life: 3.5
+            });
+          }
+        }
+      } else if (e.behaviorType === 0) {
+        // SWARMER: Direct charge
+        if (dist > 5) {
+          e.x += (dx / dist) * e.speed;
+          e.y += (dy / dist) * e.speed;
+        }
+      } else if (e.behaviorType === 1) {
+        // ZIGZAG: Sine-wave wobble
+        const baseAngle = Math.atan2(dy, dx);
+        const wobble = Math.sin(e.timer * 6) * 0.85;
+        const finalAngle = baseAngle + wobble;
+        e.x += Math.cos(finalAngle) * e.speed * 1.25;
+        e.y += Math.sin(finalAngle) * e.speed * 1.25;
+      } else if (e.behaviorType === 2) {
+        // STOMPER BRUTE: Heavy slow, periodic ground shockwave
+        if (dist > 5) {
+          e.x += (dx / dist) * (e.speed * 0.7);
+          e.y += (dy / dist) * (e.speed * 0.7);
+        }
+        if (Math.sin(e.timer * 2.5) > 0.98 && dist < 140) {
+          this.shockwaves.push({
+            x: e.x,
+            y: e.y,
+            radius: 10,
+            maxRadius: 85,
+            color: '#FF0055',
+            alpha: 0.6,
+            life: 0.35,
+            maxLife: 0.35,
+            enemyDamage: 14
+          });
+        }
+      } else if (e.behaviorType === 3) {
+        // ORBITING SNIPER: Circles at distance, shoots tracking darts
+        const targetDistance = 200;
+        if (dist > targetDistance + 20) {
+          e.x += (dx / dist) * e.speed;
+          e.y += (dy / dist) * e.speed;
+        } else if (dist < targetDistance - 20) {
+          e.x -= (dx / dist) * e.speed;
+          e.y -= (dy / dist) * e.speed;
+        } else {
+          // Orbit
+          const orbitAngle = Math.atan2(dy, dx) + Math.PI / 2;
+          e.x += Math.cos(orbitAngle) * e.speed;
+          e.y += Math.sin(orbitAngle) * e.speed;
+        }
+
+        // Fire bullet
+        if (e.timer > 2.8) {
+          e.timer = 0;
+          const fireAngle = Math.atan2(py - e.y, px - e.x);
+          this.enemyProjectiles.push({
+            x: e.x,
+            y: e.y,
+            vx: Math.cos(fireAngle) * 210,
+            vy: Math.sin(fireAngle) * 210,
+            radius: 4,
+            damage: e.damage,
+            color: '#FF1493',
+            life: 2.5
+          });
+        }
+      }
+
+      // Check contact damage with player
+      if (dist <= e.radius + this.player.radius) {
+        this.hitPlayer(e.damage * dt);
+      }
+    }
+  }
+
+  applyDamageToEnemy(enemy, damage) {
+    enemy.hp -= damage;
+    this.createDamageNumber(enemy.x, enemy.y, Math.round(damage));
+
+    if (enemy.hp <= 0) {
+      this.killEnemy(enemy);
+    }
+  }
+
+  killEnemy(enemy) {
+    const idx = this.enemies.indexOf(enemy);
+    if (idx !== -1) {
+      this.enemies.splice(idx, 1);
+    }
+
+    this.enemiesDefeated++;
+    // Score weighted by enemy power rating!
+    this.score += enemy.powerRating * 10;
+
+    // Drop EXP gem
+    this.gems.push({
+      x: enemy.x,
+      y: enemy.y,
+      value: enemy.expValue,
+      type: 'exp',
+      radius: 6,
+      color: '#00FF88'
+    });
+
+    // Drop Mojo Coin based on value
+    if (enemy.mojoValue > 0 || Math.random() < 0.4) {
+      this.gems.push({
+        x: enemy.x + (Math.random() - 0.5) * 14,
+        y: enemy.y + (Math.random() - 0.5) * 14,
+        value: enemy.mojoValue || 1,
+        type: 'mojo',
+        radius: 8,
+        color: '#FF1493'
+      });
+    }
+
+    // Log to discovered Codex
+    if (window.AppStorage) {
+      window.AppStorage.recordEmojiDefeated(enemy.shortcode, enemy.powerRating);
+    }
+
+    if (enemy.isBoss) {
+      this.bossActive = false;
+      this.currentBoss = null;
+      this.bossesDefeated++;
+      const banner = document.getElementById('boss-alert-banner');
+      if (banner) banner.classList.add('hidden');
+      this.showToast('APEX TITAN DEFEATED! +10000 PTS');
+      this.score += 10000;
+    }
+
+    // Death explosion particles
+    for (let p = 0; p < (enemy.isBoss ? 35 : 12); p++) {
+      this.particles.push({
+        x: enemy.x,
+        y: enemy.y,
+        vx: (Math.random() - 0.5) * 160,
+        vy: (Math.random() - 0.5) * 160,
+        color: enemy.isBoss ? '#FF1493' : '#FFB6D9',
+        radius: Math.random() * 4 + 2,
+        life: 0.4,
+        maxLife: 0.4
+      });
+    }
+  }
+
+  hitPlayer(rawDamage) {
+    // If shield power-up is active, absorb hit
+    if (this.player.buffs.shield.active) {
+      this.player.buffs.shield.hitsLeft--;
+      this.triggerScreenShake(0.1, 4);
+      if (this.player.buffs.shield.hitsLeft <= 0) {
+        this.player.buffs.shield.active = false;
+      }
+      return;
+    }
+
+    const effectiveDamage = Math.max(1, rawDamage * this.player.defenseMult);
+    this.player.hp -= effectiveDamage;
+    window.RetroAudio.playHit();
+    this.triggerScreenShake(0.15, 6);
+
+    // Haptic feedback via Android bridge
+    if (window.AndroidNostrBridge) {
+      try { window.AndroidNostrBridge.vibrate(40); } catch (_) {}
+    }
+
+    if (this.player.hp <= 0) {
+      this.gameOver();
+    }
+  }
+
+  updatePickups(dt) {
+    const px = this.player.x;
+    const py = this.player.y;
+    let magnetDist = this.player.magnetRadius;
+
+    // Super Magnet buff pulls all items instantly
+    if (this.player.buffs.magnet.active) {
+      magnetDist = 3000;
+    }
+
+    // Gems & Coins
+    for (let i = this.gems.length - 1; i >= 0; i--) {
+      const g = this.gems[i];
+      const dist = Math.hypot(px - g.x, py - g.y);
+
+      if (dist < magnetDist) {
+        const pullSpeed = 400 + (1 - dist / magnetDist) * 350;
+        g.x += ((px - g.x) / dist) * pullSpeed * dt;
+        g.y += ((py - g.y) / dist) * pullSpeed * dt;
+      }
+
+      if (dist < this.player.radius + g.radius) {
+        if (g.type === 'exp') {
+          this.addExp(g.value);
+        } else if (g.type === 'mojo') {
+          this.mojoEarned += g.value;
+          window.RetroAudio.playPickup();
+        }
+        this.gems.splice(i, 1);
+      }
+    }
+
+    // Power-up Crates
+    for (let i = this.powerups.length - 1; i >= 0; i--) {
+      const p = this.powerups[i];
+      p.life -= dt;
+      p.timer += dt;
+
+      if (Math.hypot(px - p.x, py - p.y) <= this.player.radius + p.radius) {
+        this.activatePowerup(p.type);
+        this.powerups.splice(i, 1);
+        continue;
+      }
+
+      if (p.life <= 0) {
+        this.powerups.splice(i, 1);
+      }
+    }
+  }
+
+  activatePowerup(type) {
+    window.RetroAudio.playPowerup();
+    this.showToast(`POWER-UP: ${type}!`);
+
+    if (type === 'SPEED') {
+      this.player.buffs.speed.active = true;
+      this.player.buffs.speed.timer = 8.0;
+    } else if (type === 'SHIELD') {
+      this.player.buffs.shield.active = true;
+      this.player.buffs.shield.hitsLeft = 3;
+      this.player.buffs.shield.timer = 12.0;
+    } else if (type === 'DAMAGE') {
+      this.player.buffs.damage.active = true;
+      this.player.buffs.damage.timer = 10.0;
+    } else if (type === 'MAGNET') {
+      this.player.buffs.magnet.active = true;
+      this.player.buffs.magnet.timer = 4.0;
+    }
+  }
+
+  addExp(amount) {
+    this.player.exp += amount;
+    window.RetroAudio.playPickup();
+
+    if (this.player.exp >= this.player.expNext) {
+      this.player.exp -= this.player.expNext;
+      this.player.level++;
+      this.player.expNext = Math.floor(this.player.expNext * 1.35 + 20);
+      this.triggerLevelUp();
+    }
+  }
+
+  triggerLevelUp() {
+    this.paused = true;
+    window.RetroAudio.playLevelUp();
+    this.showUpgradeModal();
+  }
+
+  showUpgradeModal() {
+    const modal = document.getElementById('level-up-modal');
+    const container = document.getElementById('upgrade-cards-container');
+    if (!modal || !container) return;
+
+    container.innerHTML = '';
+
+    // Generate 3 choices (weapons / spells with auto-merge)
+    const weaponPool = [
+      { id: 'lightning_zap', name: 'Lightning Zap', icon: '⚡', desc: 'Fires auto-targeting neon sparks at nearest enemies.', baseDmg: 30 },
+      { id: 'garlic_aura', name: 'Holy Garlic Aura', icon: '🧄', desc: 'Constant holy ring burning all nearby enemies.', baseDmg: 18 },
+      { id: 'orbiting_shield', name: 'Orbiting Shields', icon: '🛡️', desc: 'Spinning energy blades shredding attackers.', baseDmg: 22 },
+      { id: 'fire_dart', name: 'Fire Darts', icon: '🎯', desc: 'Armor-piercing high-velocity projectile.', baseDmg: 45 },
+      { id: 'plasma_wave', name: 'Plasma Nova', icon: '💥', desc: 'Periodic radial shockwave obliterating swarms.', baseDmg: 60 }
+    ];
+
+    // Pick 3 random
+    const shuffled = [...weaponPool].sort(() => 0.5 - Math.random()).slice(0, 3);
+
+    shuffled.forEach(w => {
+      const existing = this.player.weapons.find(pw => pw.id === w.id);
+      const isMerge = !!existing;
+      const nextLevel = isMerge ? existing.level + 1 : 1;
+
+      const card = document.createElement('div');
+      card.className = 'upgrade-card-item';
+      card.onclick = () => {
+        this.selectUpgrade(w, isMerge);
+        modal.classList.add('hidden');
+        this.paused = false;
+      };
+
+      card.innerHTML = `
+        <div class="upgrade-card-icon">${w.icon}</div>
+        <div class="upgrade-card-details">
+          <div class="upgrade-card-title-row">
+            <span class="upgrade-card-name">${w.name}</span>
+            <span class="upgrade-card-lvl">${isMerge ? `EVOLVE LVL ${nextLevel}` : 'NEW SPELL'}</span>
+          </div>
+          <p class="upgrade-card-desc">${isMerge ? `Merge duplicate to upgrade power and fire rate!` : w.desc}</p>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    modal.classList.remove('hidden');
+  }
+
+  selectUpgrade(w, isMerge) {
+    if (isMerge) {
+      const existing = this.player.weapons.find(pw => pw.id === w.id);
+      existing.level++;
+      existing.damage = Math.floor(existing.damage * 1.35);
+      existing.cooldown = Math.max(0.3, existing.cooldown * 0.88);
+      this.showToast(`${w.name} MERGED TO LVL ${existing.level}!`);
+    } else {
+      this.player.weapons.push({
+        id: w.id,
+        name: w.name,
+        level: 1,
+        timer: 0,
+        cooldown: w.id === 'plasma_wave' ? 2.5 : 1.2,
+        damage: w.baseDmg,
+        range: 300
+      });
+      this.showToast(`ACQUIRED ${w.name}!`);
+    }
+  }
+
+  updateVisualEffects(dt) {
+    // Particles
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        this.particles.splice(i, 1);
+        continue;
+      }
+      if (p.vx) p.x += p.vx * dt;
+      if (p.vy) p.y += p.vy * dt;
+    }
+
+    // Shockwaves
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.shockwaves[i];
+      sw.life -= dt;
+      sw.radius += (sw.maxRadius - sw.radius) * (dt / sw.maxLife);
+
+      if (sw.enemyDamage && sw.life > 0.1) {
+        const dist = Math.hypot(this.player.x - sw.x, this.player.y - sw.y);
+        if (Math.abs(dist - sw.radius) < 18) {
+          this.hitPlayer(sw.enemyDamage * dt * 2);
+        }
+      }
+
+      if (sw.damage && sw.life > 0.1) {
+        this.enemies.forEach(e => {
+          const dist = Math.hypot(e.x - sw.x, e.y - sw.y);
+          if (Math.abs(dist - sw.radius) < 22) {
+            this.applyDamageToEnemy(e, sw.damage * dt * 3);
+          }
+        });
+      }
+
+      if (sw.life <= 0) {
+        this.shockwaves.splice(i, 1);
+      }
+    }
+
+    // Ambient Mist
+    this.ambientMists.forEach(m => {
+      m.y += m.speedY;
+      m.x += m.speedX;
+      if (m.y < 0) m.y = this.arenaHeight;
+      if (m.x < 0) m.x = this.arenaWidth;
+      if (m.x > this.arenaWidth) m.x = 0;
+    });
+  }
+
+  createDamageNumber(x, y, amount) {
+    this.particles.push({
+      type: 'text',
+      text: String(amount),
+      x: x + (Math.random() - 0.5) * 12,
+      y: y - 10,
+      vy: -35,
+      color: '#FFFFFF',
+      life: 0.5,
+      maxLife: 0.5
+    });
+  }
+
+  triggerScreenShake(duration, intensity) {
+    if (!window.AppStorage || window.AppStorage.getSetting('shake')) {
+      this.shakeDuration = duration;
+      this.shakeIntensity = intensity;
+    }
+  }
+
+  showToast(text) {
+    const toast = document.getElementById('game-toast');
+    if (!toast) return;
+    toast.innerText = text;
+    toast.classList.add('visible');
+    toast.classList.remove('hidden');
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      toast.classList.remove('visible');
+      setTimeout(() => toast.classList.add('hidden'), 250);
+    }, 1800);
+  }
+
+  gameOver() {
+    this.running = false;
+    window.RetroAudio.playGameOver();
+
+    // Persist earned Mojo
+    if (window.AppStorage) {
+      window.AppStorage.addMojo(this.mojoEarned);
+      window.AppStorage.recordRunResult({
+        score: this.score,
+        wave: this.wave,
+        defeated: this.enemiesDefeated,
+        timeSurvived: Math.floor(this.timeSurvived)
+      });
+    }
+
+    // Display Game Over Summary
+    const modal = document.getElementById('game-over-modal');
+    if (modal) {
+      document.getElementById('summary-time').innerText = this.formatTime(this.timeSurvived);
+      document.getElementById('summary-wave').innerText = this.wave;
+      document.getElementById('summary-defeated').innerText = this.enemiesDefeated;
+      document.getElementById('summary-score').innerText = this.score.toLocaleString();
+      document.getElementById('summary-mojo').innerText = `+${this.mojoEarned} ⟡`;
+
+      const pubBtn = document.getElementById('btn-publish-receipt');
+      if (pubBtn) {
+        pubBtn.disabled = false;
+        pubBtn.innerText = '⚡ SIGN & BROADCAST TO RELAYS';
+      }
+      document.getElementById('pub-receipt-status').innerText = 'Ready to Sign';
+      document.getElementById('pub-receipt-status').className = 'badge';
+
+      modal.classList.remove('hidden');
+    }
+  }
+
+  formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
+  updateHUD() {
+    document.getElementById('hud-hp-fill').style.width = `${Math.max(0, (this.player.hp / this.player.maxHp) * 100)}%`;
+    document.getElementById('hud-hp-text').innerText = `${Math.round(this.player.hp)} / ${this.player.maxHp}`;
+    document.getElementById('hud-exp-fill').style.width = `${(this.player.exp / this.player.expNext) * 100}%`;
+    document.getElementById('hud-exp-text').innerText = `LVL ${this.player.level} (${this.player.exp} / ${this.player.expNext})`;
+    document.getElementById('hud-wave').innerText = this.wave;
+    document.getElementById('hud-score').innerText = this.score.toLocaleString();
+    document.getElementById('hud-mojo').innerText = `${this.mojoEarned} ⟡`;
+
+    // Boss bar if active
+    if (this.bossActive && this.currentBoss) {
+      const bossHpPct = Math.max(0, (this.currentBoss.hp / this.currentBoss.maxHp) * 100);
+      const bossHpFill = document.getElementById('boss-hp-fill');
+      if (bossHpFill) bossHpFill.style.width = `${bossHpPct}%`;
+    }
+
+    // Active power-up pills dock
+    const dock = document.getElementById('powerup-timers');
+    if (dock) {
+      let dockHtml = '';
+      if (this.player.buffs.speed.active) {
+        dockHtml += `<div class="powerup-pill-hud">⚡ SPEED (${Math.ceil(this.player.buffs.speed.timer)}s)</div>`;
+      }
+      if (this.player.buffs.shield.active) {
+        dockHtml += `<div class="powerup-pill-hud">🛡️ SHIELD (${this.player.buffs.shield.hitsLeft} Hits)</div>`;
+      }
+      if (this.player.buffs.damage.active) {
+        dockHtml += `<div class="powerup-pill-hud">🔥 FURY (${Math.ceil(this.player.buffs.damage.timer)}s)</div>`;
+      }
+      if (this.player.buffs.magnet.active) {
+        dockHtml += `<div class="powerup-pill-hud">🧲 VACUUM (${Math.ceil(this.player.buffs.magnet.timer)}s)</div>`;
+      }
+      dock.innerHTML = dockHtml;
+    }
+  }
+
+  // -------------------------------------------------------------
+  // RENDERING ENGINE (GOTHIC RETRO CYBERPUNK CANVAS)
+  // -------------------------------------------------------------
+  render() {
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Clear background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, this.viewWidth, this.viewHeight);
+
+    // Apply Screen Shake
+    if (this.shakeDuration > 0) {
+      const shakeX = (Math.random() - 0.5) * this.shakeIntensity;
+      const shakeY = (Math.random() - 0.5) * this.shakeIntensity;
+      ctx.translate(shakeX, shakeY);
+    }
+
+    // Camera Translation
+    ctx.translate(-this.camera.x, -this.camera.y);
+
+    // 1. Draw Gothic Cyberpunk Floor (Stone Pavers, Seams, Pink Grates, Sigil)
+    this.renderGothicArenaFloor(ctx);
+
+    // 2. Draw Pickups (Gems, Mojo Coins, Power-up Crates)
+    this.renderPickups(ctx);
+
+    // 3. Draw Shockwaves
+    this.renderShockwaves(ctx);
+
+    // 4. Draw Enemies (Hashed Emojis)
+    this.renderEnemies(ctx);
+
+    // 5. Draw Projectiles
+    this.renderProjectiles(ctx);
+
+    // 6. Draw Player (Avatar, Shields, Aura)
+    this.renderPlayer(ctx);
+
+    // 7. Draw Visual Particles & Floating Damage Texts
+    this.renderParticles(ctx);
+
+    ctx.restore();
+  }
+
+  renderGothicArenaFloor(ctx) {
+    const tileSize = 80;
+    const startX = Math.floor(this.camera.x / tileSize) * tileSize;
+    const startY = Math.floor(this.camera.y / tileSize) * tileSize;
+    const endX = this.camera.x + this.viewWidth + tileSize;
+    const endY = this.camera.y + this.viewHeight + tileSize;
+
+    // Dark Stone Pavers Grid
+    ctx.strokeStyle = '#1A1A1A';
+    ctx.lineWidth = 1.5;
+
+    for (let x = startX; x <= endX; x += tileSize) {
+      for (let y = startY; y <= endY; y += tileSize) {
+        // Subtle brick shading
+        const shadeIndex = ((x / tileSize) + (y / tileSize)) % 3;
+        ctx.fillStyle = shadeIndex === 0 ? '#0B0B0E' : shadeIndex === 1 ? '#111111' : '#0D0E12';
+        ctx.fillRect(x, y, tileSize, tileSize);
+        ctx.strokeRect(x, y, tileSize, tileSize);
+
+        // Every 5th tile has a glowing Deep Pink floor drainage grate
+        if ((x / tileSize) % 5 === 0 && (y / tileSize) % 5 === 0) {
+          const pulse = (Math.sin(performance.now() / 600 + (x + y) * 0.01) + 1) * 0.5;
+          ctx.fillStyle = '#1A1A1A';
+          ctx.fillRect(x + 14, y + 14, tileSize - 28, tileSize - 28);
+
+          // Glowing neon grates
+          ctx.fillStyle = `rgba(255, 20, 147, ${0.4 + pulse * 0.5})`;
+          for (let g = 0; g < 4; g++) {
+            ctx.fillRect(x + 18, y + 20 + g * 10, tileSize - 36, 4);
+          }
+        }
+      }
+    }
+
+    // Central Gothic Star-Cross Runic Sigil
+    const centerX = this.arenaWidth / 2;
+    const centerY = this.arenaHeight / 2;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+
+    // Medallion circle
+    ctx.strokeStyle = '#5B0633';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 160, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#FF1493';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 140, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 4-Pointed Gothic Cross
+    ctx.fillStyle = 'rgba(91, 6, 51, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(0, -130);
+    ctx.lineTo(25, -25);
+    ctx.lineTo(130, 0);
+    ctx.lineTo(25, 25);
+    ctx.lineTo(0, 130);
+    ctx.lineTo(-25, 25);
+    ctx.lineTo(-130, 0);
+    ctx.lineTo(-25, -25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Arena Perimeter Cyber-Borders
+    ctx.strokeStyle = '#FF1493';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(10, 10, this.arenaWidth - 20, this.arenaHeight - 20);
+
+    // Ambient Rising Pink Mist
+    ctx.save();
+    this.ambientMists.forEach(m => {
+      ctx.fillStyle = `rgba(255, 20, 147, ${m.alpha})`;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  renderPickups(ctx) {
+    // EXP Gems & Mojo Coins
+    this.gems.forEach(g => {
+      ctx.save();
+      if (g.type === 'exp') {
+        ctx.fillStyle = '#00FF88';
+        ctx.beginPath();
+        // Diamond shaped gem
+        ctx.moveTo(g.x, g.y - g.radius);
+        ctx.lineTo(g.x + g.radius, g.y);
+        ctx.lineTo(g.x, g.y + g.radius);
+        ctx.lineTo(g.x - g.radius, g.y);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Mojo coin with glowing ⟡ symbol
+        ctx.fillStyle = '#FF1493';
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⟡', g.x, g.y);
+      }
+      ctx.restore();
+    });
+
+    // Temporary Power-up Crates
+    this.powerups.forEach(p => {
+      ctx.save();
+      const pulse = (Math.sin(p.timer * 6) + 1) * 0.5;
+
+      // Glow circle
+      ctx.fillStyle = `rgba(255, 20, 147, ${0.3 + pulse * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius + 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Crate box
+      ctx.fillStyle = '#1A1A1A';
+      ctx.strokeStyle = '#FF1493';
+      ctx.lineWidth = 2;
+      ctx.fillRect(p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2);
+      ctx.strokeRect(p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2);
+
+      // Icon
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.icon, p.x, p.y);
+
+      ctx.restore();
+    });
+  }
+
+  renderShockwaves(ctx) {
+    this.shockwaves.forEach(sw => {
+      ctx.save();
+      ctx.strokeStyle = sw.color;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = sw.alpha * (sw.life / sw.maxLife);
+      ctx.beginPath();
+      ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  renderEnemies(ctx) {
+    this.enemies.forEach(e => {
+      ctx.save();
+
+      if (e.isBoss) {
+        // Boss Aura & Multi-ring glow
+        ctx.strokeStyle = '#FF1493';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.radius + 6, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Laser beam if firing
+        ctx.strokeStyle = 'rgba(255, 0, 85, 0.6)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y);
+        ctx.lineTo(e.x + Math.cos(e.laserAngle) * 300, e.y + Math.sin(e.laserAngle) * 300);
+        ctx.stroke();
+      }
+
+      // Draw Emoji Image or Fallback Circle
+      if (e.img && e.img.complete && e.img.naturalWidth > 0) {
+        ctx.drawImage(e.img, e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2);
+      } else {
+        // Stylized procedural fallback
+        ctx.fillStyle = e.tier === 'APEX' ? '#FF1493' : '#673AB7';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(e.shortcode.substring(0, 2).toUpperCase(), e.x, e.y);
+      }
+
+      // Health bar for damaged enemies
+      if (e.hp < e.maxHp && !e.isBoss) {
+        const barW = e.radius * 2;
+        const barH = 3;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(e.x - e.radius, e.y - e.radius - 6, barW, barH);
+        ctx.fillStyle = '#FF1493';
+        ctx.fillRect(e.x - e.radius, e.y - e.radius - 6, (e.hp / e.maxHp) * barW, barH);
+      }
+
+      ctx.restore();
+    });
+  }
+
+  renderProjectiles(ctx) {
+    // Player Projectiles
+    this.projectiles.forEach(p => {
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Enemy Projectiles
+    this.enemyProjectiles.forEach(ep => {
+      ctx.save();
+      ctx.fillStyle = ep.color;
+      ctx.beginPath();
+      ctx.arc(ep.x, ep.y, ep.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  renderPlayer(ctx) {
+    const p = this.player;
+    ctx.save();
+
+    // 1. Holy Garlic Aura visual field
+    const garlicWeapon = p.weapons.find(w => w.id.startsWith('garlic_aura'));
+    if (garlicWeapon) {
+      const radius = 80 + garlicWeapon.level * 20;
+      ctx.fillStyle = 'rgba(255, 182, 217, 0.08)';
+      ctx.strokeStyle = 'rgba(255, 20, 147, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // 2. Orbiting Shields visual blades
+    const shieldWeapon = p.weapons.find(w => w.id.startsWith('orbiting_shield'));
+    if (shieldWeapon) {
+      const shieldCount = shieldWeapon.level + 1;
+      const now = performance.now() / 600;
+      for (let i = 0; i < shieldCount; i++) {
+        const angle = now + (i * Math.PI * 2) / shieldCount;
+        const sx = p.x + Math.cos(angle) * 65;
+        const sy = p.y + Math.sin(angle) * 65;
+
+        ctx.fillStyle = '#00F0FF';
+        ctx.beginPath();
+        ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 3. Aegis Shield Power-up Bubble
+    if (p.buffs.shield.active) {
+      ctx.strokeStyle = '#00FF88';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius + 8, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // 4. Overclock Fury Damage Glow
+    if (p.buffs.damage.active) {
+      ctx.strokeStyle = '#FF4500';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius + 5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // 5. Player Core Avatar (Round with Pink Neon Ring)
+    ctx.strokeStyle = '#FF1493';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (p.avatarImg && p.avatarImg.complete) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius - 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(p.avatarImg, p.x - p.radius + 2, p.y - p.radius + 2, (p.radius - 2) * 2, (p.radius - 2) * 2);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = '#111111';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius - 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚡', p.x, p.y);
+    }
+
+    ctx.restore();
+  }
+
+  renderParticles(ctx) {
+    this.particles.forEach(p => {
+      ctx.save();
+      if (p.type === 'text') {
+        ctx.fillStyle = p.color;
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.text, p.x, p.y);
+      } else if (p.type === 'lightning') {
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(p.x1, p.y1);
+        // Jagged line
+        const midX = (p.x1 + p.x2) / 2 + (Math.random() - 0.5) * 24;
+        const midY = (p.y1 + p.y2) / 2 + (Math.random() - 0.5) * 24;
+        ctx.lineTo(midX, midY);
+        ctx.lineTo(p.x2, p.y2);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life / p.maxLife;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+}
+
+window.MojiSurvivorGame = MojiSurvivorGame;
+
+// app.js: UI Orchestrator, Storage, Codex, Upgrade Lab & Leaderboard Management
+
+class AppStorageManager {
+  constructor() {
+    this.data = {
+      mojoBalance: 0,
+      highScore: 0,
+      bestWave: 1,
+      totalKills: 0,
+      upgrades: {
+        attack: 0,
+        defense: 0,
+        speed: 0,
+        regen: 0,
+        magnet: 0
+      },
+      discoveredEmojis: {},
+      settings: {
+        sfx: true,
+        crt: true,
+        shake: true,
+        haptic: true
+      }
+    };
+    this.load();
+  }
+
+  load() {
+    try {
+      const storage = window.SafeStorage || { getItem: () => null, setItem: () => {} };
+      let saved = storage.getItem('mojisurvivor_save');
+      // If Android SharedPreferences has a backup, synchronize
+      if (window.AndroidNostrBridge) {
+        const androidSaved = window.AndroidNostrBridge.getSavedGameState();
+        if (androidSaved && androidSaved.length > 10) {
+          saved = androidSaved;
+        }
+      }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        this.data = { ...this.data, ...parsed };
+      }
+    } catch (_) {}
+  }
+
+  save() {
+    try {
+      const storage = window.SafeStorage || { getItem: () => null, setItem: () => {} };
+      const jsonStr = JSON.stringify(this.data);
+      storage.setItem('mojisurvivor_save', jsonStr);
+      if (window.AndroidNostrBridge) {
+        window.AndroidNostrBridge.saveGameState(jsonStr);
+      }
+    } catch (_) {}
+  }
+
+  getUpgrades() {
+    return this.data.upgrades;
+  }
+
+  getMojo() {
+    return this.data.mojoBalance;
+  }
+
+  addMojo(amount) {
+    this.data.mojoBalance += amount;
+    this.save();
+    this.updateLobbyStats();
+  }
+
+  spendMojo(amount) {
+    if (this.data.mojoBalance >= amount) {
+      this.data.mojoBalance -= amount;
+      this.save();
+      this.updateLobbyStats();
+      return true;
+    }
+    return false;
+  }
+
+  recordRunResult(result) {
+    if (result.score > this.data.highScore) {
+      this.data.highScore = result.score;
+    }
+    if (result.wave > this.data.bestWave) {
+      this.data.bestWave = result.wave;
+    }
+    this.data.totalKills += (result.defeated || 0);
+    this.save();
+    this.updateLobbyStats();
+  }
+
+  recordEmojiDefeated(shortcode, power) {
+    if (!this.data.discoveredEmojis[shortcode]) {
+      this.data.discoveredEmojis[shortcode] = {
+        firstKilled: Date.now(),
+        kills: 0,
+        powerRating: power
+      };
+    }
+    this.data.discoveredEmojis[shortcode].kills++;
+    this.save();
+  }
+
+  isEmojiDiscovered(shortcode) {
+    return !!this.data.discoveredEmojis[shortcode];
+  }
+
+  getSetting(key) {
+    return this.data.settings[key] ?? true;
+  }
+
+  setSetting(key, val) {
+    this.data.settings[key] = val;
+    this.save();
+  }
+
+  updateLobbyStats() {
+    const mojoEl = document.getElementById('lobby-mojo');
+    const scoreEl = document.getElementById('lobby-highscore');
+    const waveEl = document.getElementById('lobby-bestwave');
+    if (mojoEl) mojoEl.innerText = `${this.data.mojoBalance} ⟡`;
+    if (scoreEl) scoreEl.innerText = this.data.highScore.toLocaleString();
+    if (waveEl) waveEl.innerText = this.data.bestWave;
+  }
+}
+
+window.AppStorage = new AppStorageManager();
+
+// App Controller
+let gameInstance = null;
+function initApp() {
+  const canvas = document.getElementById('game-canvas');
+  if (canvas && window.MojiSurvivorGame) {
+    try {
+      gameInstance = new window.MojiSurvivorGame(canvas);
+    } catch (e) {
+      console.error('Error creating MojiSurvivorGame:', e);
+    }
+  }
+
+  if (window.AppStorage) {
+    window.AppStorage.updateLobbyStats();
+  }
+  initSettingsUI();
+  renderUpgradeLab();
+  renderCodex();
+  renderLeaderboard();
+  checkSignerStatus();
+
+  window.onLeaderboardUpdated = () => {
+    renderLeaderboard();
+  };
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+function switchTab(viewId) {
+  const views = document.querySelectorAll('.game-view');
+  views.forEach(v => v.classList.remove('active'));
+
+  const target = document.getElementById(`view-${viewId}`);
+  if (target) {
+    target.classList.add('active');
+  }
+
+  const header = document.getElementById('main-header');
+  if (header) {
+    // Hide header during active arena battle
+    if (viewId === 'arena') {
+      header.classList.add('hidden');
+    } else {
+      header.classList.remove('hidden');
+    }
+  }
+
+  if (viewId === 'lab') {
+    renderUpgradeLab();
+  } else if (viewId === 'codex') {
+    renderCodex();
+  } else if (viewId === 'leaderboard') {
+    renderLeaderboard();
+  }
+}
+
+function startGame() {
+  switchTab('arena');
+  setTimeout(() => {
+    gameInstance.startNewGame();
+  }, 100);
+}
+
+function togglePause() {
+  if (!gameInstance || !gameInstance.running) return;
+  gameInstance.paused = !gameInstance.paused;
+  const modal = document.getElementById('pause-modal');
+  if (modal) {
+    if (gameInstance.paused) {
+      document.getElementById('pause-run-stats').innerHTML = `
+        <p>Current Wave: <strong>${gameInstance.wave}</strong></p>
+        <p>Score: <strong>${gameInstance.score.toLocaleString()}</strong></p>
+        <p>Enemies Defeated: <strong>${gameInstance.enemiesDefeated}</strong></p>
+        <p>Mojo Earned: <strong>${gameInstance.mojoEarned} ⟡</strong></p>
+      `;
+      modal.classList.remove('hidden');
+    } else {
+      modal.classList.add('hidden');
+    }
+  }
+}
+
+function abandonRun() {
+  const modal = document.getElementById('pause-modal');
+  if (modal) modal.classList.add('hidden');
+  if (gameInstance) {
+    gameInstance.gameOver();
+  }
+}
+
+function closeGameOverAndReturn() {
+  const modal = document.getElementById('game-over-modal');
+  if (modal) modal.classList.add('hidden');
+  switchTab('lobby');
+}
+
+async function publishRunReceipt() {
+  const pubBtn = document.getElementById('btn-publish-receipt');
+  const statusBadge = document.getElementById('pub-receipt-status');
+  if (pubBtn) pubBtn.disabled = true;
+
+  if (statusBadge) {
+    statusBadge.innerText = 'Signing...';
+    statusBadge.className = 'badge';
+  }
+
+  const runData = {
+    score: gameInstance.score,
+    wave: gameInstance.wave,
+    defeated: gameInstance.enemiesDefeated,
+    bossesDefeated: gameInstance.bossesDefeated,
+    timeSurvived: gameInstance.timeSurvived,
+    mojoEarned: gameInstance.mojoEarned,
+    weaponsSummary: gameInstance.player.weapons.map(w => `${w.id}_lvl${w.level}`).join(',')
+  };
+
+  try {
+    const result = await window.NostrClient.createAndPublishRunReceipt(runData);
+    if (result.success) {
+      if (statusBadge) {
+        statusBadge.innerText = 'Broadcast Confirmed!';
+        statusBadge.className = 'badge success';
+      }
+      if (pubBtn) {
+        pubBtn.innerText = '✓ SCORE PUBLISHED TO RELAYS';
+      }
+      setTimeout(() => {
+        closeGameOverAndReturn();
+        switchTab('leaderboard');
+      }, 1200);
+    }
+  } catch (err) {
+    if (statusBadge) {
+      statusBadge.innerText = 'Publish Failed';
+    }
+    if (pubBtn) pubBtn.disabled = false;
+  }
+}
+
+// -------------------------------------------------------------
+// UPGRADE LAB LOGIC
+// -------------------------------------------------------------
+const LAB_CATEGORIES = [
+  { id: 'attack', name: 'Cybernetic Claws (Attack)', icon: '⚔️', desc: '+12% Base spell damage per tier.', maxTier: 5, basePrice: 15 },
+  { id: 'defense', name: 'Nanotech Plating (Defense)', icon: '🛡️', desc: '+15 Max HP and -8% incoming damage.', maxTier: 5, basePrice: 15 },
+  { id: 'speed', name: 'Hyper Thrusters (Speed)', icon: '⚡', desc: '+10% Movement speed and dodging agility.', maxTier: 5, basePrice: 20 },
+  { id: 'regen', name: 'Bio-Repair Nanites (Regen)', icon: '💖', desc: 'Restores +0.5 HP per second continuously.', maxTier: 5, basePrice: 25 },
+  { id: 'magnet', name: 'Quantum Core (Magnet Radius)', icon: '🧲', desc: '+25px Pick-up suction range for gems and Mojo.', maxTier: 5, basePrice: 10 }
+];
+
+function renderUpgradeLab() {
+  const container = document.getElementById('upgrades-list-container');
+  const balanceEl = document.getElementById('lab-mojo-balance');
+  if (!container) return;
+
+  const currentMojo = window.AppStorage.getMojo();
+  if (balanceEl) balanceEl.innerText = `${currentMojo} ⟡`;
+
+  const upgrades = window.AppStorage.getUpgrades();
+  container.innerHTML = '';
+
+  LAB_CATEGORIES.forEach(cat => {
+    const currentTier = upgrades[cat.id] || 0;
+    const isMax = currentTier >= cat.maxTier;
+    const price = Math.floor(cat.basePrice * Math.pow(1.6, currentTier));
+
+    const row = document.createElement('div');
+    row.className = 'upgrade-row';
+
+    let meterHtml = '';
+    for (let p = 1; p <= cat.maxTier; p++) {
+      meterHtml += `<div class="meter-pip ${p <= currentTier ? 'filled' : ''}"></div>`;
+    }
+
+    row.innerHTML = `
+      <div class="upgrade-row-icon">${cat.icon}</div>
+      <div class="upgrade-row-info">
+        <h4>${cat.name}</h4>
+        <p>${cat.desc}</p>
+        <div class="upgrade-meter">${meterHtml}</div>
+      </div>
+      <div>
+        ${isMax ? '<button class="btn-buy-upgrade disabled">MAX</button>' :
+          `<button class="btn-buy-upgrade ${currentMojo < price ? 'disabled' : ''}" onclick="buyUpgrade('${cat.id}', ${price})">
+            ${price} ⟡
+          </button>`
+        }
+      </div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function buyUpgrade(id, price) {
+  if (window.AppStorage.spendMojo(price)) {
+    const upgrades = window.AppStorage.getUpgrades();
+    upgrades[id] = (upgrades[id] || 0) + 1;
+    window.AppStorage.save();
+    window.RetroAudio.playLevelUp();
+    renderUpgradeLab();
+  }
+}
+
+// -------------------------------------------------------------
+// EMOJI CODEX (LOCAL DISCOVERED & GLOBAL CODEX)
+// -------------------------------------------------------------
+function switchCodexTab(tab) {
+  currentCodexTab = tab;
+  document.getElementById('tab-codex-local').className = `tab-pill ${tab === 'local' ? 'active' : ''}`;
+  document.getElementById('tab-codex-global').className = `tab-pill ${tab === 'global' ? 'active' : ''}`;
+  renderCodex();
+}
+
+function renderCodex() {
+  const container = document.getElementById('codex-grid-container');
+  const counterEl = document.getElementById('codex-counter');
+  const searchInput = document.getElementById('codex-search');
+  if (!container) return;
+
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const allEmojis = Array.from(window.NostrClient.discoveredEmojis.values());
+
+  container.innerHTML = '';
+  let discoveredCount = 0;
+
+  allEmojis.forEach(em => {
+    const isDiscovered = window.AppStorage.isEmojiDiscovered(em.shortcode);
+    if (isDiscovered) discoveredCount++;
+
+    // In local tab, undiscovered are hidden or displayed with ???
+    if (query && !em.shortcode.toLowerCase().includes(query) && !em.hash.includes(query)) {
+      return;
+    }
+
+    const card = document.createElement('div');
+    const showDetails = currentCodexTab === 'global' || isDiscovered;
+
+    card.className = `codex-card ${showDetails ? 'discovered' : 'undiscovered'}`;
+    card.innerHTML = `
+      <img class="codex-emoji-thumb" src="${em.url}" alt="${em.shortcode}">
+      <span class="codex-name">${showDetails ? `:${em.shortcode}:` : '???'}</span>
+      <span class="codex-tier-badge">${showDetails ? em.tier : 'UNKNOWN'}</span>
+      <div class="codex-stats-row">
+        <span>HP: ${showDetails ? em.hp : '??'}</span>
+        <span>SPD: ${showDetails ? em.speed.toFixed(1) : '??'}</span>
+        <span>ATK: ${showDetails ? em.damage : '??'}</span>
+      </div>
+      <div class="codex-stats-row">
+        <span>TYPE: ${showDetails ? em.behaviorName : '???'}</span>
+        <span>PWR: ${showDetails ? em.powerRating : '???'}</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  if (counterEl) {
+    counterEl.innerText = `Discovered: ${discoveredCount} / ${allEmojis.length}`;
+  }
+}
+
+function filterCodex() {
+  renderCodex();
+}
+
+// -------------------------------------------------------------
+// LEADERBOARDS
+// -------------------------------------------------------------
+function renderLeaderboard() {
+  const tbody = document.getElementById('leaderboard-tbody');
+  if (!tbody) return;
+
+  const runs = window.NostrClient.leaderboardRuns;
+  tbody.innerHTML = '';
+
+  if (runs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color:#B8B8B8;">Querying Nostr relays for high scores...</td></tr>`;
+    return;
+  }
+
+  runs.slice(0, 50).forEach((run, idx) => {
+    const tr = document.createElement('tr');
+    const isMe = run.pubkey === window.NostrClient.pubkey;
+
+    tr.innerHTML = `
+      <td class="table-rank">#${idx + 1}</td>
+      <td>
+        <div class="player-cell">
+          <img class="player-thumb" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><circle cx='10' cy='10' r='9' fill='%23FF1493'/></svg>">
+          <span>${isMe ? 'YOU' : window.MojiCrypto.hexToNpub(run.pubkey).substring(0, 11) + '...'}</span>
+        </div>
+      </td>
+      <td class="text-pink"><strong>${run.score.toLocaleString()}</strong></td>
+      <td>Wave ${run.wave}</td>
+      <td>${run.defeated}</td>
+      <td><span class="badge success">✓ ${run.sig.substring(0, 8)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function refreshLeaderboard() {
+  window.NostrClient.connectRelays();
+  renderLeaderboard();
+}
+
+// -------------------------------------------------------------
+// SETTINGS & SIGNER
+// -------------------------------------------------------------
+function initSettingsUI() {
+  const sfxToggle = document.getElementById('toggle-sfx');
+  const crtToggle = document.getElementById('toggle-crt');
+  const shakeToggle = document.getElementById('toggle-shake');
+  const hapticToggle = document.getElementById('toggle-haptic');
+
+  if (sfxToggle) sfxToggle.checked = window.AppStorage.getSetting('sfx');
+  if (crtToggle) crtToggle.checked = window.AppStorage.getSetting('crt');
+  if (shakeToggle) shakeToggle.checked = window.AppStorage.getSetting('shake');
+  if (hapticToggle) hapticToggle.checked = window.AppStorage.getSetting('haptic');
+
+  const crtOverlay = document.getElementById('crt-overlay');
+  if (crtOverlay) {
+    crtOverlay.style.display = window.AppStorage.getSetting('crt') ? 'block' : 'none';
+  }
+
+  // Populate Relays list
+  const relayContainer = document.getElementById('settings-relays-list');
+  if (relayContainer) {
+    relayContainer.innerHTML = window.NostrClient.relays.map(r => `
+      <div style="font-family:monospace; font-size:11px; padding:4px 0; color:#B8B8B8;">
+        ⚡ ${r}
+      </div>
+    `).join('');
+  }
+}
+
+function toggleSetting(key) {
+  const toggle = document.getElementById(`toggle-${key}`);
+  if (!toggle) return;
+  window.AppStorage.setSetting(key, toggle.checked);
+
+  if (key === 'crt') {
+    const crtOverlay = document.getElementById('crt-overlay');
+    if (crtOverlay) crtOverlay.style.display = toggle.checked ? 'block' : 'none';
+  } else if (key === 'sfx') {
+    window.RetroAudio.enabled = toggle.checked;
+  }
+}
+
+function checkSignerStatus() {
+  const isAmber = window.NostrClient.isAndroidBridgeAvailable() && window.AndroidNostrBridge.isAmberInstalled();
+  const badge = document.getElementById('header-signer-badge');
+  const statusLight = document.getElementById('signer-status-light');
+  const signerType = document.getElementById('settings-signer-type');
+  const pubkeyDisplay = document.getElementById('settings-pubkey-display');
+
+  const npub = window.MojiCrypto.hexToNpub(window.NostrClient.pubkey);
+  if (pubkeyDisplay) pubkeyDisplay.innerText = npub;
+
+  if (isAmber && window.NostrClient.signerType === 'amber') {
+    if (badge) badge.innerText = 'Amber NIP-55';
+    if (statusLight) statusLight.style.background = '#00FF88';
+    if (signerType) signerType.innerText = 'Connected via Amber Signer';
+  } else {
+    if (badge) badge.innerText = 'Guest Key';
+    if (statusLight) statusLight.style.background = '#FF1493';
+    if (signerType) signerType.innerText = 'Local Guest Key';
+  }
+}
+
+function connectAmberSigner() {
+  if (!window.NostrClient.isAndroidBridgeAvailable()) {
+    alert('External Amber signer is supported on Android devices. Using local keypair for Web/Emulator.');
+    return;
+  }
+  window.NostrClient.requestAmberPublicKey((res) => {
+    if (res.status === 'success' && res.pubkey) {
+      window.NostrClient.pubkey = res.pubkey;
+      window.NostrClient.signerType = 'amber';
+      localStorage.setItem('mojisurvivor_pubkey', res.pubkey);
+      checkSignerStatus();
+      alert('Connected to Amber Nostr Signer!');
+    } else {
+      alert('Amber connection cancelled or failed. Falling back to local key.');
+    }
+  });
+}
+
+function generateNewGuestKey() {
+  localStorage.removeItem('mojisurvivor_privkey');
+  localStorage.removeItem('mojisurvivor_pubkey');
+  window.NostrClient.initKeys();
+  window.NostrClient.signerType = 'guest';
+  checkSignerStatus();
+  alert('New Guest Nostr Key generated!');
+}
+
+function openProfileModal() {
+  switchTab('settings');
+}
+
+</script>
+
+</body>
+</html>
